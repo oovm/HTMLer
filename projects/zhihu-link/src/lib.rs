@@ -1,8 +1,14 @@
+#![feature(try_blocks)]
+
 mod errors;
+mod answers;
 
 use std::io::Write;
-pub use errors::{Error, Result};
-use scraper::Html;
+
+pub use errors::{Error, ZhihuResult};
+
+
+pub use crate::answers::ZhihuAnswer;
 
 #[tokio::test]
 async fn test_reqwest() {
@@ -17,8 +23,7 @@ async fn test_reqwest() {
 
 #[test]
 fn test_parse() {
-    let out = Html::parse_document(include_str!("test.html")).unwrap();
-    for node in out.children.iter() {
-        println!("{:#?}", out.children.get(1));
-    }
+    let mut zhihu = ZhihuAnswer::new();
+    zhihu.parse(include_str!("test.html")).unwrap();
+    println!("zhihu: {:#?}", zhihu);
 }
