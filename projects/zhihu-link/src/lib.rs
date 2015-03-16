@@ -25,5 +25,7 @@ async fn test_reqwest() {
 fn test_parse() {
     let mut zhihu = ZhihuAnswer::new();
     zhihu.parse(include_str!("test.html")).unwrap();
-    println!("zhihu: {:#?}", zhihu);
+    println!("{:#?}", zhihu);
+    let mut file = std::fs::File::create("test.md").unwrap();
+    file.write_all(zhihu.to_string().as_bytes()).unwrap();
 }
