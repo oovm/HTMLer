@@ -1,0 +1,47 @@
+[package]
+name = "htmler"
+description = "HTML parsing and querying with CSS selectors"
+version = "0.0.0"
+edition = "2021"
+keywords = [
+    "html",
+    "css",
+    "selector",
+    "scraping"
+]
+
+authors = [
+    "Aster <192607617@qq.com>",
+    "June McEnroe <june@causal.agency>",
+]
+license = "ISC"
+
+repository = "https://github.com/causal-agent/scraper"
+readme = "readmes.md"
+
+[dependencies]
+cssparser = "0.29.6"
+ego-tree = "0.6.2"
+html5ever = "0.26"
+selectors = "0.24.0"
+smallvec = "1.10.0"
+tendril = "0.4.3"
+ahash = "0.8"
+indexmap = { version = "1.9.3", optional = true }
+once_cell = "1.0"
+
+[dependencies.getopts]
+version = "0.2.21"
+optional = true
+
+[features]
+default = ["main", "errors"]
+deterministic = ["indexmap"]
+main = ["getopts"]
+atomic = []
+errors = []
+
+[[bin]]
+name = "scraper"
+path = "src/main.rs"
+required-features = ["main"]

@@ -64,7 +64,6 @@ impl ZhihuAnswer {
         Ok(())
     }
     fn read_content_node(&mut self, node: NodeRef<Node>) -> ZhihuResult<()> {
-
         match node.value() {
             Node::Document => { println!("document") }
             Node::Fragment => {
@@ -88,26 +87,34 @@ impl ZhihuAnswer {
                         self.content.push_str("\n\n");
                     }
                     "span" => {
-                        for child in e.classes() {
-                            let script = Selector::parse("script").expect("invalid content selector");
-                            node.select(&script);
-                            if child.contains("ztext-math") {
-                                match e.attr("data-tex") {
-                                    Some(s) => {
-                                        self.content.push_str(" $$");
-                                        self.content.push_str(s);
-                                        self.content.push_str("$$ ");
-                                    },
-                                    None => {}
+                        // math mode
+                        if e.has_class("ztext-math", CaseSensitivity::AsciiCaseInsensitive) {
+                            for child in node.descendants() {
+                                println!("child: {:?}", child.value());
+                                match child.value().as_element() {
+                                    Some(s) if s.name().eq("script") => {
+                                        for class in e.classes() {
+                                            // println!("class: {}", class);
+                                        }
+                                    }
+                                    _ => {}
                                 }
                             }
-                            else {
-                                for child in node.children() {
-                                    self.read_content_node(child)?;
+                            match e.attr("data-tex") {
+                                Some(s) => {
+                                    self.content.push_str(" $$");
+                                    self.content.push_str(s);
+                                    self.content.push_str("$$ ");
                                 }
+                                None => {}
                             }
                         }
-
+                        // normal mode
+                        else {
+                            for child in node.children() {
+                                self.read_content_node(child)?;
+                            }
+                        }
                     }
                     unknown => panic!("unknown element: {unknown}"),
                 }
