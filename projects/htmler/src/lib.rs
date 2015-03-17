@@ -1,3 +1,4 @@
+#![feature(once_cell)]
 //! HTML parsing and querying with CSS selectors.
 //!
 //! `scraper` is on [Crates.io][crate] and [GitHub][github].

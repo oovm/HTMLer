@@ -1,7 +1,7 @@
 use std::fmt::{Display, Formatter};
 use crate::ZhihuResult;
 
-use scraper::{CaseSensitivity, Html, Node, Selector};
+use htmler::{CaseSensitivity, Html, Node, Selector};
 use ego_tree::NodeRef;
 
 #[derive(Debug)]

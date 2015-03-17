@@ -1,5 +1,6 @@
 //! HTML nodes.
 
+use std::cell::OnceCell;
 #[cfg(not(feature = "deterministic"))]
 use ahash::AHashMap as HashMap;
 #[cfg(not(feature = "deterministic"))]
@@ -10,7 +11,7 @@ use std::slice::Iter as SliceIter;
 
 use crate::{CaseSensitivity, StrTendril};
 use html5ever::{Attribute, LocalName, QualName};
-use once_cell::unsync::OnceCell;
+
 
 /// An HTML node.
 // `Element` is usally the most common variant and hence boxing it
