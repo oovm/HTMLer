@@ -1,8 +1,8 @@
-use std::fmt::{Display, Formatter};
 use crate::ZhihuResult;
+use std::fmt::{Display, Formatter};
 
-use htmler::{CaseSensitivity, Html, Node, Selector};
 use ego_tree::NodeRef;
+use htmler::{CaseSensitivity, Html, Node, Selector};
 
 #[derive(Debug)]
 pub struct ZhihuAnswer {
@@ -26,7 +26,6 @@ impl ZhihuAnswer {
         self.extract_title(&html)?;
         self.extract_description(&html)?;
         self.extract_content(&html)?;
-
 
         Ok(())
     }
@@ -63,7 +62,9 @@ impl ZhihuAnswer {
     }
     fn read_content_node(&mut self, node: NodeRef<Node>) -> ZhihuResult<()> {
         match node.value() {
-            Node::Document => { println!("document") }
+            Node::Document => {
+                println!("document")
+            }
             Node::Fragment => {
                 println!("fragment");
             }

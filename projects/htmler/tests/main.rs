@@ -20,8 +20,5 @@ fn tag_with_newline() {
 
     let mut iter = document.select(&selector);
     let a = iter.next().unwrap();
-    assert_eq!(
-        a.value().get_attribute("href"),
-        Some("https://github.com/causal-agent/scraper")
-    );
+    assert_eq!(a.value().get_attribute("href"), Some("https://github.com/causal-agent/scraper"));
 }

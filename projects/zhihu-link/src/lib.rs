@@ -1,12 +1,11 @@
 #![feature(try_blocks)]
 
-mod errors;
 mod answers;
+mod errors;
 
 use std::io::Write;
 
 pub use errors::{Error, ZhihuResult};
-
 
 pub use crate::answers::ZhihuAnswer;
 

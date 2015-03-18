@@ -1,17 +1,13 @@
 //! CSS selectors.
 
-use std::convert::TryFrom;
-use std::fmt;
-use std::str::FromStr;
+use std::{convert::TryFrom, fmt};
 
 use smallvec::SmallVec;
 
 use html5ever::{LocalName, Namespace};
-use selectors::parser::SelectorParseErrorKind;
-use selectors::{matching, parser};
+use selectors::{matching, parser, parser::SelectorParseErrorKind};
 
-use crate::error::SelectorErrorKind;
-use crate::ElementRef;
+use crate::{error::SelectorErrorKind, ElementRef};
 
 /// Wrapper around CSS selectors.
 ///
@@ -23,6 +19,7 @@ pub struct Selector {
 }
 
 impl Selector {
+    /// Parses a CSS selector group.
     pub fn new(selectors: &str) -> Self {
         Self::try_parse(selectors).expect("Failed to parse selector:`{selectors}`}")
     }
@@ -46,16 +43,10 @@ impl Selector {
     /// The optional `scope` argument is used to specify which element has `:scope` pseudo-class.
     /// When it is `None`, `:scope` will match the root element.
     pub fn matches_with_scope(&self, element: &ElementRef, scope: Option<ElementRef>) -> bool {
-        let mut context = matching::MatchingContext::new(
-            matching::MatchingMode::Normal,
-            None,
-            None,
-            matching::QuirksMode::NoQuirks,
-        );
+        let mut context =
+            matching::MatchingContext::new(matching::MatchingMode::Normal, None, None, matching::QuirksMode::NoQuirks);
         context.scope_element = scope.map(|x| selectors::Element::opaque(&x));
-        self.selectors
-            .iter()
-            .any(|s| matching::matches_selector(s, 0, None, element, &mut context, &mut |_, _| {}))
+        self.selectors.iter().any(|s| matching::matches_selector(s, 0, None, element, &mut context, &mut |_, _| {}))
     }
 }
 
@@ -72,19 +63,19 @@ impl<'i> parser::Parser<'i> for Parser {
 pub struct Simple;
 
 impl parser::SelectorImpl for Simple {
+    // see: https://github.com/servo/servo/pull/19747#issuecomment-357106065
+    type ExtraMatchingData = String;
     type AttrValue = CssString;
     type Identifier = CssLocalName;
     type LocalName = CssLocalName;
-    type NamespacePrefix = CssLocalName;
     type NamespaceUrl = Namespace;
+    type NamespacePrefix = CssLocalName;
     type BorrowedNamespaceUrl = Namespace;
+
     type BorrowedLocalName = CssLocalName;
-
     type NonTSPseudoClass = NonTSPseudoClass;
-    type PseudoElement = PseudoElement;
 
-    // see: https://github.com/servo/servo/pull/19747#issuecomment-357106065
-    type ExtraMatchingData = String;
+    type PseudoElement = PseudoElement;
 }
 
 /// Wraps [`String`] so that it can be used with [`selectors`]
@@ -105,8 +96,8 @@ impl AsRef<str> for CssString {
 
 impl cssparser::ToCss for CssString {
     fn to_css<W>(&self, dest: &mut W) -> fmt::Result
-        where
-            W: fmt::Write,
+    where
+        W: fmt::Write,
     {
         cssparser::serialize_string(&self.0, dest)
     }
@@ -124,8 +115,8 @@ impl<'a> From<&'a str> for CssLocalName {
 
 impl cssparser::ToCss for CssLocalName {
     fn to_css<W>(&self, dest: &mut W) -> fmt::Result
-        where
-            W: fmt::Write,
+    where
+        W: fmt::Write,
     {
         dest.write_str(&self.0)
     }
@@ -149,8 +140,8 @@ impl parser::NonTSPseudoClass for NonTSPseudoClass {
 
 impl cssparser::ToCss for NonTSPseudoClass {
     fn to_css<W>(&self, dest: &mut W) -> fmt::Result
-        where
-            W: fmt::Write,
+    where
+        W: fmt::Write,
     {
         dest.write_str("")
     }
@@ -166,8 +157,8 @@ impl parser::PseudoElement for PseudoElement {
 
 impl cssparser::ToCss for PseudoElement {
     fn to_css<W>(&self, dest: &mut W) -> fmt::Result
-        where
-            W: fmt::Write,
+    where
+        W: fmt::Write,
     {
         dest.write_str("")
     }

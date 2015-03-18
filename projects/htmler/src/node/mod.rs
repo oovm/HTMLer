@@ -2,13 +2,10 @@
 
 use std::cell::OnceCell;
 
-use std::fmt;
-use std::ops::Deref;
-use std::slice::Iter as SliceIter;
+use std::{fmt, ops::Deref, slice::Iter as SliceIter};
 
-use crate::{CaseSensitivity, StrTendril};
+use crate::{CaseSensitivity, HtmlStr};
 use html5ever::{Attribute, LocalName, QualName};
-
 
 /// An HTML node.
 // `Element` is usally the most common variant and hence boxing it
@@ -18,22 +15,16 @@ use html5ever::{Attribute, LocalName, QualName};
 pub enum Node {
     /// The document root.
     Document,
-
     /// The fragment root.
     Fragment,
-
     /// A doctype.
     Doctype(Doctype),
-
     /// A comment.
     Comment(Comment),
-
     /// Text.
     Text(Text),
-
     /// An element.
     Element(Element),
-
     /// A processing instruction.
     ProcessingInstruction(ProcessingInstruction),
 }
@@ -129,13 +120,11 @@ impl fmt::Debug for Node {
 #[derive(Clone, PartialEq, Eq)]
 pub struct Doctype {
     /// The doctype name.
-    pub name: StrTendril,
-
+    pub name: HtmlStr,
     /// The doctype public ID.
-    pub public_id: StrTendril,
-
+    pub public_id: HtmlStr,
     /// The doctype system ID.
-    pub system_id: StrTendril,
+    pub system_id: HtmlStr,
 }
 
 impl Doctype {
@@ -157,13 +146,7 @@ impl Doctype {
 
 impl fmt::Debug for Doctype {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        write!(
-            f,
-            "<!DOCTYPE {} PUBLIC {:?} {:?}>",
-            self.name(),
-            self.public_id(),
-            self.system_id()
-        )
+        write!(f, "<!DOCTYPE {} PUBLIC {:?} {:?}>", self.name(), self.public_id(), self.system_id())
     }
 }
 
@@ -171,7 +154,7 @@ impl fmt::Debug for Doctype {
 #[derive(Clone, PartialEq, Eq)]
 pub struct Comment {
     /// The comment text.
-    pub comment: StrTendril,
+    pub comment: HtmlStr,
 }
 
 impl Deref for Comment {
@@ -192,7 +175,7 @@ impl fmt::Debug for Comment {
 #[derive(Clone, PartialEq, Eq)]
 pub struct Text {
     /// The text.
-    pub text: StrTendril,
+    pub text: HtmlStr,
 }
 
 impl Deref for Text {
@@ -210,31 +193,23 @@ impl fmt::Debug for Text {
 }
 
 /// A Map of attributes that preserves the order of the attributes.
-pub type Attributes = indexmap::IndexMap<QualName, StrTendril>;
+pub type Attributes = indexmap::IndexMap<QualName, HtmlStr>;
 
 /// An HTML element.
 #[derive(Clone, PartialEq, Eq)]
 pub struct Element {
     pub(crate) name: QualName,
     pub(crate) attrs: Attributes,
-    id: OnceCell<Option<StrTendril>>,
+    id: OnceCell<Option<HtmlStr>>,
     classes: OnceCell<Vec<LocalName>>,
 }
 
 impl Element {
     #[doc(hidden)]
     pub fn new(name: QualName, attributes: Vec<Attribute>) -> Self {
-        let attrs = attributes
-            .into_iter()
-            .map(|a| (a.name, crate::tendril_util::make(a.value)))
-            .collect();
+        let attrs = attributes.into_iter().map(|a| (a.name, crate::tendril_util::make(a.value))).collect();
 
-        Element {
-            attrs,
-            name,
-            id: OnceCell::new(),
-            classes: OnceCell::new(),
-        }
+        Element { attrs, name, id: OnceCell::new(), classes: OnceCell::new() }
     }
 
     /// Returns the element attributes.
@@ -250,19 +225,13 @@ impl Element {
     /// Returns the element ID.
     pub fn id(&self) -> Option<&str> {
         self.id
-            .get_or_init(|| {
-                self.attrs
-                    .iter()
-                    .find(|(name, _)| name.local.as_ref() == "id")
-                    .map(|(_, value)| value.clone())
-            })
+            .get_or_init(|| self.attrs.iter().find(|(name, _)| name.local.as_ref() == "id").map(|(_, value)| value.clone()))
             .as_deref()
     }
 
     /// Returns true if element has the class.
     pub fn has_class(&self, class: &str, case_sensitive: CaseSensitivity) -> bool {
-        self.classes()
-            .any(|c| case_sensitive.eq(c.as_bytes(), class.as_bytes()))
+        self.classes().any(|c| case_sensitive.eq(c.as_bytes(), class.as_bytes()))
     }
 
     /// Returns an iterator over the element's classes.
@@ -281,9 +250,7 @@ impl Element {
             classes
         });
 
-        HtmlClasses {
-            inner: classes.iter(),
-        }
+        HtmlClasses { inner: classes.iter() }
     }
 
     /// Returns the value of an attribute.
@@ -300,9 +267,7 @@ impl Element {
 
     /// Returns an iterator over the element's attributes.
     pub fn attributes(&self) -> HtmlAttributes {
-        HtmlAttributes {
-            inner: self.attrs.iter(),
-        }
+        HtmlAttributes { inner: self.attrs.iter() }
     }
 }
 
@@ -322,7 +287,7 @@ impl<'a> Iterator for HtmlClasses<'a> {
 }
 
 /// An iterator over a node's attributes.
-pub type AttributesIter<'a> = indexmap::map::Iter<'a, QualName, StrTendril>;
+pub type AttributesIter<'a> = indexmap::map::Iter<'a, QualName, HtmlStr>;
 
 /// Iterator over attributes.
 #[allow(missing_debug_implementations)]
@@ -353,9 +318,9 @@ impl fmt::Debug for Element {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ProcessingInstruction {
     /// The PI target.
-    pub target: StrTendril,
+    pub target: HtmlStr,
     /// The PI data.
-    pub data: StrTendril,
+    pub data: HtmlStr,
 }
 
 impl Deref for ProcessingInstruction {

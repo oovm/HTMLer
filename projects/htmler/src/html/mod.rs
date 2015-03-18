@@ -1,18 +1,13 @@
 //! HTML documents and fragments.
 
-#[cfg(feature = "errors")]
+
 use std::borrow::Cow;
 
-use ego_tree::iter::Nodes;
-use ego_tree::Tree;
-use html5ever::serialize::SerializeOpts;
-use html5ever::tree_builder::QuirksMode;
-use html5ever::QualName;
-use html5ever::{driver, serialize};
+use ego_tree::{iter::Nodes, Tree};
+use html5ever::{driver, serialize, serialize::SerializeOpts, tree_builder::QuirksMode, QualName};
 use tendril::TendrilSink;
 
-use crate::selector::Selector;
-use crate::{ElementRef, Node};
+use crate::{selector::Selector, ElementRef, Node};
 
 /// An HTML tree.
 ///
@@ -22,7 +17,7 @@ use crate::{ElementRef, Node};
 /// Implements the `TreeSink` trait from the `html5ever` crate, which allows HTML to be parsed.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Html {
-    #[cfg(feature = "errors")]
+
     /// Parse errors.
     pub errors: Vec<Cow<'static, str>>,
 
@@ -37,7 +32,7 @@ impl Html {
     /// Creates an empty HTML document.
     pub fn new_document() -> Self {
         Html {
-            #[cfg(feature = "errors")]
+
             errors: Vec::new(),
             quirks_mode: QuirksMode::NoQuirks,
             tree: Tree::new(Node::Document),
@@ -47,7 +42,7 @@ impl Html {
     /// Creates an empty HTML fragment.
     pub fn new_fragment() -> Self {
         Html {
-            #[cfg(feature = "errors")]
+
             errors: Vec::new(),
             quirks_mode: QuirksMode::NoQuirks,
             tree: Tree::new(Node::Fragment),
@@ -62,8 +57,8 @@ impl Html {
     /// # fn main() {
     /// # let document = "";
     /// use html5ever::driver::{self, ParseOpts};
-    /// use tendril::TendrilSink;
     /// use htmler::Html;
+    /// use tendril::TendrilSink;
     ///
     /// let parser = driver::parse_document(Html::new_document(), ParseOpts::default());
     /// let html = parser.one(document);
@@ -87,20 +82,12 @@ impl Html {
 
     /// Returns an iterator over elements matching a selector.
     pub fn select<'a, 'b>(&'a self, selector: &'b Selector) -> Select<'a, 'b> {
-        Select {
-            inner: self.tree.nodes(),
-            selector,
-        }
+        Select { inner: self.tree.nodes(), selector }
     }
 
     /// Returns the root `<html>` element.
     pub fn root_element(&self) -> ElementRef {
-        let root_node = self
-            .tree
-            .root()
-            .children()
-            .find(|child| child.value().is_element())
-            .expect("html node missing");
+        let root_node = self.tree.root().children().find(|child| child.value().is_element()).expect("html node missing");
         ElementRef::wrap(root_node).unwrap()
     }
 
@@ -163,17 +150,13 @@ mod tree_sink;
 
 #[cfg(test)]
 mod tests {
-    use super::Html;
-    use super::Selector;
+    use super::{Html, Selector};
 
     #[test]
     fn root_element_fragment() {
         let html = Html::parse_fragment(r#"<a href="http://github.com">1</a>"#);
         let root_ref = html.root_element();
-        let href = root_ref
-            .select(&Selector::try_parse("a").unwrap())
-            .next()
-            .unwrap();
+        let href = root_ref.select(&Selector::try_parse("a").unwrap()).next().unwrap();
         assert_eq!(href.inner_html(), "1");
         assert_eq!(href.value().get_attribute("href").unwrap(), "http://github.com");
     }
@@ -182,10 +165,7 @@ mod tests {
     fn root_element_document_doctype() {
         let html = Html::parse_document("<!DOCTYPE html>\n<title>abc</title>");
         let root_ref = html.root_element();
-        let title = root_ref
-            .select(&Selector::try_parse("title").unwrap())
-            .next()
-            .unwrap();
+        let title = root_ref.select(&Selector::try_parse("title").unwrap()).next().unwrap();
         assert_eq!(title.inner_html(), "abc");
     }
 
@@ -193,10 +173,7 @@ mod tests {
     fn root_element_document_comment() {
         let html = Html::parse_document("<!-- comment --><title>abc</title>");
         let root_ref = html.root_element();
-        let title = root_ref
-            .select(&Selector::try_parse("title").unwrap())
-            .next()
-            .unwrap();
+        let title = root_ref.select(&Selector::try_parse("title").unwrap()).next().unwrap();
         assert_eq!(title.inner_html(), "abc");
     }
 
@@ -204,11 +181,7 @@ mod tests {
     fn select_is_reversible() {
         let html = Html::parse_document("<p>element1</p><p>element2</p><p>element3</p>");
         let selector = Selector::try_parse("p").unwrap();
-        let result: Vec<_> = html
-            .select(&selector)
-            .rev()
-            .map(|e| e.inner_html())
-            .collect();
+        let result: Vec<_> = html.select(&selector).rev().map(|e| e.inner_html()).collect();
         assert_eq!(result, vec!["element3", "element2", "element1"]);
     }
 

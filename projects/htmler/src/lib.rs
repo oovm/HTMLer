@@ -139,10 +139,7 @@
 #[macro_use]
 extern crate html5ever;
 
-pub use crate::element_ref::ElementRef;
-pub use crate::html::Html;
-pub use crate::node::Node;
-pub use crate::selector::Selector;
+pub use crate::{element_ref::ElementRef, html::Html, node::Node, selector::Selector};
 
 pub use selectors::{attr::CaseSensitivity, Element};
 
@@ -156,10 +153,10 @@ pub mod selector;
 pub(crate) mod tendril_util {
     use html5ever::tendril;
     /// Atomic equivalent to the default `StrTendril` type.
-    pub type StrTendril = tendril::Tendril<tendril::fmt::UTF8, tendril::Atomic>;
+    pub type HtmlStr = tendril::Tendril<tendril::fmt::UTF8, tendril::Atomic>;
 
     /// Convert a standard tendril into an atomic one.
-    pub fn make(s: tendril::StrTendril) -> StrTendril {
+    pub fn make(s: tendril::StrTendril) -> HtmlStr {
         s.into_send().into()
     }
 }
@@ -176,7 +173,4 @@ pub(crate) mod tendril_util {
     }
 }
 
-pub use tendril_util::StrTendril;
-
-#[cfg(test)]
-mod test;
+pub use tendril_util::HtmlStr;

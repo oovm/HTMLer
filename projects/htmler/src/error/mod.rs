@@ -62,12 +62,8 @@ impl<'a> From<BasicParseErrorKind<'a>> for SelectorErrorKind<'a> {
 impl<'a> From<SelectorParseErrorKind<'a>> for SelectorErrorKind<'a> {
     fn from(err: SelectorParseErrorKind<'a>) -> Self {
         match err {
-            SelectorParseErrorKind::PseudoElementExpectedColon(token) => {
-                Self::ExpectedColonOnPseudoElement(token)
-            }
-            SelectorParseErrorKind::PseudoElementExpectedIdent(token) => {
-                Self::ExpectedIdentityOnPseudoElement(token)
-            }
+            SelectorParseErrorKind::PseudoElementExpectedColon(token) => Self::ExpectedColonOnPseudoElement(token),
+            SelectorParseErrorKind::PseudoElementExpectedIdent(token) => Self::ExpectedIdentityOnPseudoElement(token),
             other => Self::UnexpectedSelectorParseError(other),
         }
     }
@@ -86,18 +82,12 @@ impl<'a> Display for SelectorErrorKind<'a> {
                 Self::InvalidAtRule(rule) => format!("Invalid @-rule {:?}", rule),
                 Self::InvalidAtRuleBody => "The body of an @-rule was invalid".to_string(),
                 Self::QualRuleInvalid => "The qualified name was invalid".to_string(),
-                Self::ExpectedColonOnPseudoElement(token) => format!(
-                    "Expected a ':' token for pseudoelement, got {:?} instead",
-                    utils::render_token(token)
-                ),
-                Self::ExpectedIdentityOnPseudoElement(token) => format!(
-                    "Expected identity for pseudoelement, got {:?} instead",
-                    utils::render_token(token)
-                ),
-                Self::UnexpectedSelectorParseError(err) => format!(
-                    "Unexpected error occurred. Please report this to the developer\n{:#?}",
-                    err
-                ),
+                Self::ExpectedColonOnPseudoElement(token) =>
+                    format!("Expected a ':' token for pseudoelement, got {:?} instead", utils::render_token(token)),
+                Self::ExpectedIdentityOnPseudoElement(token) =>
+                    format!("Expected identity for pseudoelement, got {:?} instead", utils::render_token(token)),
+                Self::UnexpectedSelectorParseError(err) =>
+                    format!("Unexpected error occurred. Please report this to the developer\n{:#?}", err),
             }
         )
     }

@@ -1,7 +1,8 @@
 use html5ever::Namespace;
-use selectors::attr::{AttrSelectorOperation, CaseSensitivity, NamespaceConstraint};
-use selectors::matching;
-use selectors::{Element, OpaqueElement};
+use selectors::{
+    attr::{AttrSelectorOperation, CaseSensitivity, NamespaceConstraint},
+    matching, Element, OpaqueElement,
+};
 
 use super::ElementRef;
 use crate::selector::{CssLocalName, CssString, NonTSPseudoClass, PseudoElement, Simple};
@@ -31,15 +32,11 @@ impl<'a> Element for ElementRef<'a> {
     }
 
     fn prev_sibling_element(&self) -> Option<Self> {
-        self.prev_siblings()
-            .find(|sibling| sibling.value().is_element())
-            .map(ElementRef::new)
+        self.prev_siblings().find(|sibling| sibling.value().is_element()).map(ElementRef::new)
     }
 
     fn next_sibling_element(&self) -> Option<Self> {
-        self.next_siblings()
-            .find(|sibling| sibling.value().is_element())
-            .map(ElementRef::new)
+        self.next_siblings().find(|sibling| sibling.value().is_element()).map(ElementRef::new)
     }
 
     fn is_html_element_in_html_document(&self) -> bool {
@@ -81,11 +78,7 @@ impl<'a> Element for ElementRef<'a> {
         false
     }
 
-    fn match_pseudo_element(
-        &self,
-        _pe: &PseudoElement,
-        _context: &mut matching::MatchingContext<Self::Impl>,
-    ) -> bool {
+    fn match_pseudo_element(&self, _pe: &PseudoElement, _context: &mut matching::MatchingContext<Self::Impl>) -> bool {
         false
     }
 
@@ -117,23 +110,21 @@ impl<'a> Element for ElementRef<'a> {
     }
 
     fn is_empty(&self) -> bool {
-        !self
-            .children()
-            .any(|child| child.value().is_element() || child.value().is_text())
+        !self.children().any(|child| child.value().is_element() || child.value().is_text())
     }
 
     fn is_root(&self) -> bool {
-        self.parent()
-            .map_or(false, |parent| parent.value().is_document())
+        self.parent().map_or(false, |parent| parent.value().is_document())
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::html::Html;
-    use crate::selector::{CssLocalName, Selector};
-    use selectors::attr::CaseSensitivity;
-    use selectors::Element;
+    use crate::{
+        html::Html,
+        selector::{CssLocalName, Selector},
+    };
+    use selectors::{attr::CaseSensitivity, Element};
 
     #[test]
     fn test_has_id() {
@@ -142,24 +133,12 @@ mod tests {
         let sel = Selector::try_parse("p").unwrap();
 
         let element = fragment.select(&sel).next().unwrap();
-        assert_eq!(
-            true,
-            element.has_id(
-                &CssLocalName::from("link_id_456"),
-                CaseSensitivity::CaseSensitive
-            )
-        );
+        assert_eq!(true, element.has_id(&CssLocalName::from("link_id_456"), CaseSensitivity::CaseSensitive));
 
         let html = "<p>hey there</p>";
         let fragment = Html::parse_fragment(html);
         let element = fragment.select(&sel).next().unwrap();
-        assert_eq!(
-            false,
-            element.has_id(
-                &CssLocalName::from("any_link_id"),
-                CaseSensitivity::CaseSensitive
-            )
-        );
+        assert_eq!(false, element.has_id(&CssLocalName::from("any_link_id"), CaseSensitivity::CaseSensitive));
     }
 
     #[test]
@@ -183,24 +162,12 @@ mod tests {
         let fragment = Html::parse_fragment(html);
         let sel = Selector::try_parse("p").unwrap();
         let element = fragment.select(&sel).next().unwrap();
-        assert_eq!(
-            true,
-            element.has_class(
-                &CssLocalName::from("my_class"),
-                CaseSensitivity::CaseSensitive
-            )
-        );
+        assert_eq!(true, element.has_class(&CssLocalName::from("my_class"), CaseSensitivity::CaseSensitive));
 
         let html = "<p>hey there</p>";
         let fragment = Html::parse_fragment(html);
         let sel = Selector::try_parse("p").unwrap();
         let element = fragment.select(&sel).next().unwrap();
-        assert_eq!(
-            false,
-            element.has_class(
-                &CssLocalName::from("my_class"),
-                CaseSensitivity::CaseSensitive
-            )
-        );
+        assert_eq!(false, element.has_class(&CssLocalName::from("my_class"), CaseSensitivity::CaseSensitive));
     }
 }

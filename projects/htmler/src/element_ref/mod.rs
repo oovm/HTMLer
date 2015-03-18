@@ -2,12 +2,13 @@
 
 use std::ops::Deref;
 
-use ego_tree::iter::{Edge, Traverse};
-use ego_tree::NodeRef;
+use ego_tree::{
+    iter::{Edge, Traverse},
+    NodeRef,
+};
 use html5ever::serialize::{serialize, SerializeOpts, TraversalScope};
 
-use crate::node::Element;
-use crate::{Node, Selector};
+use crate::{node::Element, Node, Selector};
 
 /// Wrapper around a reference to an element node.
 ///
@@ -25,11 +26,7 @@ impl<'a> ElementRef<'a> {
 
     /// Wraps a `NodeRef` only if it references a `Node::Element`.
     pub fn wrap(node: NodeRef<'a, Node>) -> Option<Self> {
-        if node.value().is_element() {
-            Some(ElementRef::new(node))
-        } else {
-            None
-        }
+        if node.value().is_element() { Some(ElementRef::new(node)) } else { None }
     }
 
     /// Returns the `Element` referenced by `self`.
@@ -42,11 +39,7 @@ impl<'a> ElementRef<'a> {
         let mut inner = self.traverse();
         inner.next(); // Skip Edge::Open(self).
 
-        Select {
-            scope: *self,
-            inner,
-            selector,
-        }
+        Select { scope: *self, inner, selector }
     }
 
     fn serialize(&self, traversal_scope: TraversalScope) -> String {
@@ -72,9 +65,7 @@ impl<'a> ElementRef<'a> {
 
     /// Returns an iterator over descendent text nodes.
     pub fn text(&self) -> Text<'a> {
-        Text {
-            inner: self.traverse(),
-        }
+        Text { inner: self.traverse() }
     }
 }
 
@@ -136,8 +127,7 @@ mod serializable;
 
 #[cfg(test)]
 mod tests {
-    use crate::html::Html;
-    use crate::selector::Selector;
+    use crate::{html::Html, selector::Selector};
 
     #[test]
     fn test_scope() {
