@@ -25,11 +25,9 @@ html5ever = "0.26"
 selectors = "0.24.0"
 smallvec = "1.10.0"
 tendril = "0.4.3"
-ahash = "0.8"
-indexmap = { version = "1.9.3", optional = true }
+indexmap = { version = "1.9.3"}
 
 [features]
-default = ["errors", "deterministic"]
-deterministic = ["indexmap"]
+default = ["errors"]
 atomic = []
 errors = []

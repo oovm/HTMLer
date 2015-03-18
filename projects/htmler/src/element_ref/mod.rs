@@ -51,7 +51,7 @@ impl<'a> ElementRef<'a> {
 
     fn serialize(&self, traversal_scope: TraversalScope) -> String {
         let opts = SerializeOpts {
-            scripting_enabled: false, // It's not clear what this does.
+            scripting_enabled: true, // It's not clear what this does.
             traversal_scope,
             create_missing_parent: false,
         };
@@ -151,8 +151,8 @@ mod tests {
             </div>
         ";
         let fragment = Html::parse_fragment(html);
-        let sel1 = Selector::parse("div > span").unwrap();
-        let sel2 = Selector::parse(":scope > b").unwrap();
+        let sel1 = Selector::try_parse("div > span").unwrap();
+        let sel2 = Selector::try_parse(":scope > b").unwrap();
 
         let element1 = fragment.select(&sel1).next().unwrap();
         let element2 = element1.select(&sel2).next().unwrap();

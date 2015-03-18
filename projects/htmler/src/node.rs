@@ -1,10 +1,7 @@
 //! HTML nodes.
 
 use std::cell::OnceCell;
-#[cfg(not(feature = "deterministic"))]
-use ahash::AHashMap as HashMap;
-#[cfg(not(feature = "deterministic"))]
-use std::collections::hash_map;
+
 use std::fmt;
 use std::ops::Deref;
 use std::slice::Iter as SliceIter;
@@ -213,26 +210,14 @@ impl fmt::Debug for Text {
 }
 
 /// A Map of attributes that preserves the order of the attributes.
-#[cfg(feature = "deterministic")]
 pub type Attributes = indexmap::IndexMap<QualName, StrTendril>;
-
-/// A Map of attributes that doesn't preserve the order of the attributes.
-/// Please enable the `deterministic` feature for order-preserving
-/// (de)serialization.
-#[cfg(not(feature = "deterministic"))]
-pub type Attributes = HashMap<QualName, StrTendril>;
 
 /// An HTML element.
 #[derive(Clone, PartialEq, Eq)]
 pub struct Element {
-    /// The element name.
-    pub name: QualName,
-
-    /// The element attributes.
-    pub attrs: Attributes,
-
+    pub(crate) name: QualName,
+    pub(crate) attrs: Attributes,
     id: OnceCell<Option<StrTendril>>,
-
     classes: OnceCell<Vec<LocalName>>,
 }
 
@@ -250,6 +235,11 @@ impl Element {
             id: OnceCell::new(),
             classes: OnceCell::new(),
         }
+    }
+
+    /// Returns the element attributes.
+    pub fn is_a(&self, name: &str) -> bool {
+        self.name.local.as_ref().eq_ignore_ascii_case(name)
     }
 
     /// Returns the element name.
@@ -276,7 +266,7 @@ impl Element {
     }
 
     /// Returns an iterator over the element's classes.
-    pub fn classes(&self) -> Classes {
+    pub fn classes(&self) -> HtmlClasses {
         let classes = self.classes.get_or_init(|| {
             let mut classes: Vec<LocalName> = self
                 .attrs
@@ -291,20 +281,26 @@ impl Element {
             classes
         });
 
-        Classes {
+        HtmlClasses {
             inner: classes.iter(),
         }
     }
 
     /// Returns the value of an attribute.
-    pub fn attr(&self, attr: &str) -> Option<&str> {
+    pub fn get_attribute(&self, attr: &str) -> Option<&str> {
         let qualname = QualName::new(None, ns!(), LocalName::from(attr));
         self.attrs.get(&qualname).map(Deref::deref)
     }
 
+    /// Returns true if the element has the attribute.
+    pub fn has_attribute(&self, attr: &str) -> bool {
+        let qualname = QualName::new(None, ns!(), LocalName::from(attr));
+        self.attrs.contains_key(&qualname)
+    }
+
     /// Returns an iterator over the element's attributes.
-    pub fn attrs(&self) -> Attrs {
-        Attrs {
+    pub fn attributes(&self) -> HtmlAttributes {
+        HtmlAttributes {
             inner: self.attrs.iter(),
         }
     }
@@ -313,11 +309,11 @@ impl Element {
 /// Iterator over classes.
 #[allow(missing_debug_implementations)]
 #[derive(Clone)]
-pub struct Classes<'a> {
+pub struct HtmlClasses<'a> {
     inner: SliceIter<'a, LocalName>,
 }
 
-impl<'a> Iterator for Classes<'a> {
+impl<'a> Iterator for HtmlClasses<'a> {
     type Item = &'a str;
 
     fn next(&mut self) -> Option<&'a str> {
@@ -326,21 +322,16 @@ impl<'a> Iterator for Classes<'a> {
 }
 
 /// An iterator over a node's attributes.
-#[cfg(feature = "deterministic")]
 pub type AttributesIter<'a> = indexmap::map::Iter<'a, QualName, StrTendril>;
-
-/// An iterator over a node's attributes.
-#[cfg(not(feature = "deterministic"))]
-pub type AttributesIter<'a> = hash_map::Iter<'a, QualName, StrTendril>;
 
 /// Iterator over attributes.
 #[allow(missing_debug_implementations)]
 #[derive(Clone)]
-pub struct Attrs<'a> {
+pub struct HtmlAttributes<'a> {
     inner: AttributesIter<'a>,
 }
 
-impl<'a> Iterator for Attrs<'a> {
+impl<'a> Iterator for HtmlAttributes<'a> {
     type Item = (&'a str, &'a str);
 
     fn next(&mut self) -> Option<(&'a str, &'a str)> {
@@ -351,7 +342,7 @@ impl<'a> Iterator for Attrs<'a> {
 impl fmt::Debug for Element {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         write!(f, "<{}", self.name())?;
-        for (key, value) in self.attrs() {
+        for (key, value) in self.attributes() {
             write!(f, " {}={:?}", key, value)?;
         }
         write!(f, ">")

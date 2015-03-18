@@ -2,6 +2,7 @@
 
 use std::convert::TryFrom;
 use std::fmt;
+use std::str::FromStr;
 
 use smallvec::SmallVec;
 
@@ -22,9 +23,12 @@ pub struct Selector {
 }
 
 impl Selector {
-    /// Parses a CSS selector group.
+    pub fn new(selectors: &str) -> Self {
+        Self::try_parse(selectors).expect("Failed to parse selector:`{selectors}`}")
+    }
 
-    pub fn parse(selectors: &'_ str) -> Result<Self, SelectorErrorKind> {
+    /// Parses a CSS selector group.
+    pub fn try_parse(selectors: &'_ str) -> Result<Self, SelectorErrorKind> {
         let mut parser_input = cssparser::ParserInput::new(selectors);
         let mut parser = cssparser::Parser::new(&mut parser_input);
 
@@ -57,6 +61,7 @@ impl Selector {
 
 /// An implementation of `Parser` for `selectors`
 struct Parser;
+
 impl<'i> parser::Parser<'i> for Parser {
     type Impl = Simple;
     type Error = SelectorParseErrorKind<'i>;
@@ -100,8 +105,8 @@ impl AsRef<str> for CssString {
 
 impl cssparser::ToCss for CssString {
     fn to_css<W>(&self, dest: &mut W) -> fmt::Result
-    where
-        W: fmt::Write,
+        where
+            W: fmt::Write,
     {
         cssparser::serialize_string(&self.0, dest)
     }
@@ -119,8 +124,8 @@ impl<'a> From<&'a str> for CssLocalName {
 
 impl cssparser::ToCss for CssLocalName {
     fn to_css<W>(&self, dest: &mut W) -> fmt::Result
-    where
-        W: fmt::Write,
+        where
+            W: fmt::Write,
     {
         dest.write_str(&self.0)
     }
@@ -144,8 +149,8 @@ impl parser::NonTSPseudoClass for NonTSPseudoClass {
 
 impl cssparser::ToCss for NonTSPseudoClass {
     fn to_css<W>(&self, dest: &mut W) -> fmt::Result
-    where
-        W: fmt::Write,
+        where
+            W: fmt::Write,
     {
         dest.write_str("")
     }
@@ -161,8 +166,8 @@ impl parser::PseudoElement for PseudoElement {
 
 impl cssparser::ToCss for PseudoElement {
     fn to_css<W>(&self, dest: &mut W) -> fmt::Result
-    where
-        W: fmt::Write,
+        where
+            W: fmt::Write,
     {
         dest.write_str("")
     }
@@ -172,7 +177,7 @@ impl<'i> TryFrom<&'i str> for Selector {
     type Error = SelectorErrorKind<'i>;
 
     fn try_from(s: &'i str) -> Result<Self, Self::Error> {
-        Selector::parse(s)
+        Selector::try_parse(s)
     }
 }
 

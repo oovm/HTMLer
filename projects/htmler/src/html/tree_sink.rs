@@ -10,8 +10,8 @@ use std::borrow::Cow;
 
 /// Note: does not support the `<template>` element.
 impl TreeSink for Html {
-    type Output = Self;
     type Handle = NodeId;
+    type Output = Self;
 
     fn finish(self) -> Self {
         self
@@ -25,19 +25,9 @@ impl TreeSink for Html {
         let _ = msg;
     }
 
-    // Set the document's quirks mode.
-    fn set_quirks_mode(&mut self, mode: QuirksMode) {
-        self.quirks_mode = mode;
-    }
-
     // Get a handle to the Document node.
     fn get_document(&mut self) -> Self::Handle {
         self.tree.root().id()
-    }
-
-    // Do two handles refer to the same node?
-    fn same_node(&self, x: &Self::Handle, y: &Self::Handle) -> bool {
-        x == y
     }
 
     // What is the name of this element?
@@ -83,22 +73,16 @@ impl TreeSink for Html {
             .id()
     }
 
-    // Append a DOCTYPE element to the Document node.
-    fn append_doctype_to_document(
-        &mut self,
-        name: StrTendril,
-        public_id: StrTendril,
-        system_id: StrTendril,
-    ) {
-        let name = make_tendril(name);
-        let public_id = make_tendril(public_id);
-        let system_id = make_tendril(system_id);
-        let doctype = Doctype {
-            name,
-            public_id,
-            system_id,
-        };
-        self.tree.root_mut().append(Node::Doctype(doctype));
+    // Create Processing Instruction.
+    fn create_pi(&mut self, target: StrTendril, data: StrTendril) -> Self::Handle {
+        let target = make_tendril(target);
+        let data = make_tendril(data);
+        self.tree
+            .orphan(Node::ProcessingInstruction(ProcessingInstruction {
+                target,
+                data,
+            }))
+            .id()
     }
 
     // Append a node as the last child of the given node. If this would produce adjacent sibling
@@ -130,6 +114,58 @@ impl TreeSink for Html {
                 }
             }
         }
+    }
+
+    fn append_based_on_parent_node(
+        &mut self,
+        element: &Self::Handle,
+        prev_element: &Self::Handle,
+        child: NodeOrText<Self::Handle>,
+    ) {
+        if self.tree.get(*element).unwrap().parent().is_some() {
+            self.append_before_sibling(element, child)
+        } else {
+            self.append(prev_element, child)
+        }
+    }
+
+    // Append a DOCTYPE element to the Document node.
+    fn append_doctype_to_document(
+        &mut self,
+        name: StrTendril,
+        public_id: StrTendril,
+        system_id: StrTendril,
+    ) {
+        let name = make_tendril(name);
+        let public_id = make_tendril(public_id);
+        let system_id = make_tendril(system_id);
+        let doctype = Doctype {
+            name,
+            public_id,
+            system_id,
+        };
+        self.tree.root_mut().append(Node::Doctype(doctype));
+    }
+
+    // Mark a HTML <script> element as "already started".
+    fn mark_script_already_started(&mut self, _node: &Self::Handle) {}
+
+    // Get a handle to a template's template contents.
+    //
+    // The tree builder promises this will never be called with something else than a template
+    // element.
+    fn get_template_contents(&mut self, target: &Self::Handle) -> Self::Handle {
+        self.tree.get(*target).unwrap().first_child().unwrap().id()
+    }
+
+    // Do two handles refer to the same node?
+    fn same_node(&self, x: &Self::Handle, y: &Self::Handle) -> bool {
+        x == y
+    }
+
+    // Set the document's quirks mode.
+    fn set_quirks_mode(&mut self, mode: QuirksMode) {
+        self.quirks_mode = mode;
     }
 
     // Append a node as the sibling immediately before the given node. If that node has no parent,
@@ -176,19 +212,6 @@ impl TreeSink for Html {
         }
     }
 
-    // Detach the given node from its parent.
-    fn remove_from_parent(&mut self, target: &Self::Handle) {
-        self.tree.get_mut(*target).unwrap().detach();
-    }
-
-    // Remove all the children from node and append them to new_parent.
-    fn reparent_children(&mut self, node: &Self::Handle, new_parent: &Self::Handle) {
-        self.tree
-            .get_mut(*new_parent)
-            .unwrap()
-            .reparent_from_id_append(*node);
-    }
-
     // Add each attribute to the given element, if no attribute with that name already exists. The
     // tree builder promises this will never be called with something else than an element.
     fn add_attrs_if_missing(&mut self, target: &Self::Handle, attrs: Vec<Attribute>) {
@@ -206,39 +229,16 @@ impl TreeSink for Html {
         }
     }
 
-    // Get a handle to a template's template contents.
-    //
-    // The tree builder promises this will never be called with something else than a template
-    // element.
-    fn get_template_contents(&mut self, target: &Self::Handle) -> Self::Handle {
-        self.tree.get(*target).unwrap().first_child().unwrap().id()
+    // Detach the given node from its parent.
+    fn remove_from_parent(&mut self, target: &Self::Handle) {
+        self.tree.get_mut(*target).unwrap().detach();
     }
 
-    // Mark a HTML <script> element as "already started".
-    fn mark_script_already_started(&mut self, _node: &Self::Handle) {}
-
-    // Create Processing Instruction.
-    fn create_pi(&mut self, target: StrTendril, data: StrTendril) -> Self::Handle {
-        let target = make_tendril(target);
-        let data = make_tendril(data);
+    // Remove all the children from node and append them to new_parent.
+    fn reparent_children(&mut self, node: &Self::Handle, new_parent: &Self::Handle) {
         self.tree
-            .orphan(Node::ProcessingInstruction(ProcessingInstruction {
-                target,
-                data,
-            }))
-            .id()
-    }
-
-    fn append_based_on_parent_node(
-        &mut self,
-        element: &Self::Handle,
-        prev_element: &Self::Handle,
-        child: NodeOrText<Self::Handle>,
-    ) {
-        if self.tree.get(*element).unwrap().parent().is_some() {
-            self.append_before_sibling(element, child)
-        } else {
-            self.append(prev_element, child)
-        }
+            .get_mut(*new_parent)
+            .unwrap()
+            .reparent_from_id_append(*node);
     }
 }

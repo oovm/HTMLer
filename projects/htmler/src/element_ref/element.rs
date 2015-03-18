@@ -30,18 +30,6 @@ impl<'a> Element for ElementRef<'a> {
         false
     }
 
-    fn is_part(&self, _name: &CssLocalName) -> bool {
-        false
-    }
-
-    fn is_same_type(&self, other: &Self) -> bool {
-        self.value().name == other.value().name
-    }
-
-    fn imported_part(&self, _: &CssLocalName) -> Option<CssLocalName> {
-        None
-    }
-
     fn prev_sibling_element(&self) -> Option<Self> {
         self.prev_siblings()
             .find(|sibling| sibling.value().is_element())
@@ -65,6 +53,10 @@ impl<'a> Element for ElementRef<'a> {
 
     fn has_namespace(&self, namespace: &Namespace) -> bool {
         &self.value().name.ns == namespace
+    }
+
+    fn is_same_type(&self, other: &Self) -> bool {
+        self.value().name == other.value().name
     }
 
     fn attr_matches(
@@ -116,6 +108,14 @@ impl<'a> Element for ElementRef<'a> {
         self.value().has_class(&name.0, case_sensitivity)
     }
 
+    fn imported_part(&self, _: &CssLocalName) -> Option<CssLocalName> {
+        None
+    }
+
+    fn is_part(&self, _name: &CssLocalName) -> bool {
+        false
+    }
+
     fn is_empty(&self) -> bool {
         !self
             .children()
@@ -139,7 +139,7 @@ mod tests {
     fn test_has_id() {
         let html = "<p id='link_id_456'>hey there</p>";
         let fragment = Html::parse_fragment(html);
-        let sel = Selector::parse("p").unwrap();
+        let sel = Selector::try_parse("p").unwrap();
 
         let element = fragment.select(&sel).next().unwrap();
         assert_eq!(
@@ -166,13 +166,13 @@ mod tests {
     fn test_is_link() {
         let html = "<link href='https://www.example.com'>";
         let fragment = Html::parse_fragment(html);
-        let sel = Selector::parse("link").unwrap();
+        let sel = Selector::try_parse("link").unwrap();
         let element = fragment.select(&sel).next().unwrap();
         assert_eq!(true, element.is_link());
 
         let html = "<p>hey there</p>";
         let fragment = Html::parse_fragment(html);
-        let sel = Selector::parse("p").unwrap();
+        let sel = Selector::try_parse("p").unwrap();
         let element = fragment.select(&sel).next().unwrap();
         assert_eq!(false, element.is_link());
     }
@@ -181,7 +181,7 @@ mod tests {
     fn test_has_class() {
         let html = "<p class='my_class'>hey there</p>";
         let fragment = Html::parse_fragment(html);
-        let sel = Selector::parse("p").unwrap();
+        let sel = Selector::try_parse("p").unwrap();
         let element = fragment.select(&sel).next().unwrap();
         assert_eq!(
             true,
@@ -193,7 +193,7 @@ mod tests {
 
         let html = "<p>hey there</p>";
         let fragment = Html::parse_fragment(html);
-        let sel = Selector::parse("p").unwrap();
+        let sel = Selector::try_parse("p").unwrap();
         let element = fragment.select(&sel).next().unwrap();
         assert_eq!(
             false,

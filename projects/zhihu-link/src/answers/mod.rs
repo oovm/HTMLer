@@ -31,8 +31,7 @@ impl ZhihuAnswer {
         Ok(())
     }
     pub fn extract_title(&mut self, html: &Html) -> ZhihuResult<()> {
-        // #root > div > main > div > div > div:nth-child(10) > div:nth-child(2) > div > div.QuestionHeader-content > div.QuestionHeader-main > h1
-        let selector = Selector::parse("h1.QuestionHeader-title").expect("invalid title selector");
+        let selector = Selector::new("h1.QuestionHeader-title");
         let _: Option<_> = try {
             let node = html.select(&selector).next()?;
             let text = node.first_child()?.value().as_text()?;
@@ -41,8 +40,7 @@ impl ZhihuAnswer {
         Ok(())
     }
     pub fn extract_description(&mut self, html: &Html) -> ZhihuResult<()> {
-        // #root > div > main > div > div > div:nth-child(10) > div:nth-child(2) > div > div.QuestionHeader-content > div.QuestionHeader-main > div:nth-child(4) > div > div > div > div > span > p
-        let selector = Selector::parse("div.QuestionRichText").expect("invalid description selector");
+        let selector = Selector::new("div.QuestionRichText");
         let _: Option<_> = try {
             for node in html.select(&selector) {
                 let text = node.first_child()?.value().as_text()?;
@@ -53,7 +51,7 @@ impl ZhihuAnswer {
     }
     pub fn extract_content(&mut self, html: &Html) -> ZhihuResult<()> {
         // div.RichContent-inner
-        let selector = Selector::parse("span.CopyrightRichText-richText").expect("invalid content selector");
+        let selector = Selector::new("span.CopyrightRichText-richText");
         let _: Option<_> = try {
             let node = html.select(&selector).next()?;
             for child in node.children() {
@@ -90,17 +88,16 @@ impl ZhihuAnswer {
                         // math mode
                         if e.has_class("ztext-math", CaseSensitivity::AsciiCaseInsensitive) {
                             for child in node.descendants() {
-                                println!("child: {:?}", child.value());
                                 match child.value().as_element() {
-                                    Some(s) if s.name().eq("script") => {
+                                    Some(s) if s.is_a("script") => {
                                         for class in e.classes() {
-                                            // println!("class: {}", class);
+                                            println!("class: {}", class);
                                         }
                                     }
                                     _ => {}
                                 }
                             }
-                            match e.attr("data-tex") {
+                            match e.get_attribute("data-tex") {
                                 Some(s) => {
                                     self.content.push_str(" $$");
                                     self.content.push_str(s);

@@ -59,14 +59,11 @@ impl Html {
     /// This is a convenience method for the following:
     ///
     /// ```
-    /// # extern crate html5ever;
-    /// # extern crate scraper;
-    /// # extern crate tendril;
     /// # fn main() {
     /// # let document = "";
     /// use html5ever::driver::{self, ParseOpts};
-    /// use scraper::Html;
     /// use tendril::TendrilSink;
+    /// use htmler::Html;
     ///
     /// let parser = driver::parse_document(Html::new_document(), ParseOpts::default());
     /// let html = parser.one(document);
@@ -110,7 +107,7 @@ impl Html {
     /// Serialize entire document into HTML.
     pub fn html(&self) -> String {
         let opts = SerializeOpts {
-            scripting_enabled: false, // It's not clear what this does.
+            scripting_enabled: true, // It's not clear what this does.
             traversal_scope: html5ever::serialize::TraversalScope::IncludeNode,
             create_missing_parent: false,
         };
@@ -174,11 +171,11 @@ mod tests {
         let html = Html::parse_fragment(r#"<a href="http://github.com">1</a>"#);
         let root_ref = html.root_element();
         let href = root_ref
-            .select(&Selector::parse("a").unwrap())
+            .select(&Selector::try_parse("a").unwrap())
             .next()
             .unwrap();
         assert_eq!(href.inner_html(), "1");
-        assert_eq!(href.value().attr("href").unwrap(), "http://github.com");
+        assert_eq!(href.value().get_attribute("href").unwrap(), "http://github.com");
     }
 
     #[test]
@@ -186,7 +183,7 @@ mod tests {
         let html = Html::parse_document("<!DOCTYPE html>\n<title>abc</title>");
         let root_ref = html.root_element();
         let title = root_ref
-            .select(&Selector::parse("title").unwrap())
+            .select(&Selector::try_parse("title").unwrap())
             .next()
             .unwrap();
         assert_eq!(title.inner_html(), "abc");
@@ -197,7 +194,7 @@ mod tests {
         let html = Html::parse_document("<!-- comment --><title>abc</title>");
         let root_ref = html.root_element();
         let title = root_ref
-            .select(&Selector::parse("title").unwrap())
+            .select(&Selector::try_parse("title").unwrap())
             .next()
             .unwrap();
         assert_eq!(title.inner_html(), "abc");
@@ -206,7 +203,7 @@ mod tests {
     #[test]
     fn select_is_reversible() {
         let html = Html::parse_document("<p>element1</p><p>element2</p><p>element3</p>");
-        let selector = Selector::parse("p").unwrap();
+        let selector = Selector::try_parse("p").unwrap();
         let result: Vec<_> = html
             .select(&selector)
             .rev()
@@ -218,7 +215,7 @@ mod tests {
     #[test]
     fn select_has_a_size_hint() {
         let html = Html::parse_document("<p>element1</p><p>element2</p><p>element3</p>");
-        let selector = Selector::parse("p").unwrap();
+        let selector = Selector::try_parse("p").unwrap();
         let (lower, upper) = html.select(&selector).size_hint();
         assert_eq!(lower, 0);
         assert_eq!(upper, Some(10));
