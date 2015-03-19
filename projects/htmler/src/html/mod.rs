@@ -1,6 +1,5 @@
 //! HTML documents and fragments.
 
-
 use std::borrow::Cow;
 
 use ego_tree::{iter::Nodes, Tree};
@@ -17,7 +16,6 @@ use crate::{selector::Selector, ElementRef, Node};
 /// Implements the `TreeSink` trait from the `html5ever` crate, which allows HTML to be parsed.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Html {
-
     /// Parse errors.
     pub errors: Vec<Cow<'static, str>>,
 
@@ -31,22 +29,12 @@ pub struct Html {
 impl Html {
     /// Creates an empty HTML document.
     pub fn new_document() -> Self {
-        Html {
-
-            errors: Vec::new(),
-            quirks_mode: QuirksMode::NoQuirks,
-            tree: Tree::new(Node::Document),
-        }
+        Html { errors: Vec::new(), quirks_mode: QuirksMode::NoQuirks, tree: Tree::new(Node::Document) }
     }
 
     /// Creates an empty HTML fragment.
     pub fn new_fragment() -> Self {
-        Html {
-
-            errors: Vec::new(),
-            quirks_mode: QuirksMode::NoQuirks,
-            tree: Tree::new(Node::Fragment),
-        }
+        Html { errors: Vec::new(), quirks_mode: QuirksMode::NoQuirks, tree: Tree::new(Node::Fragment) }
     }
 
     /// Parses a string of HTML as a document.
@@ -81,8 +69,8 @@ impl Html {
     }
 
     /// Returns an iterator over elements matching a selector.
-    pub fn select<'a, 'b>(&'a self, selector: &'b Selector) -> Select<'a, 'b> {
-        Select { inner: self.tree.nodes(), selector }
+    pub fn select<'a, 'b>(&'a self, selector: &'b Selector) -> HtmlSelect<'a, 'b> {
+        HtmlSelect { inner: self.tree.nodes(), selector }
     }
 
     /// Returns the root `<html>` element.
@@ -106,20 +94,23 @@ impl Html {
 
 /// Iterator over elements matching a selector.
 #[derive(Debug)]
-pub struct Select<'a, 'b> {
+pub struct HtmlSelect<'a, 'b> {
     inner: Nodes<'a, Node>,
     selector: &'b Selector,
 }
 
-impl<'a, 'b> Iterator for Select<'a, 'b> {
+impl<'a, 'b> Iterator for HtmlSelect<'a, 'b> {
     type Item = ElementRef<'a>;
 
     fn next(&mut self) -> Option<ElementRef<'a>> {
         for node in self.inner.by_ref() {
-            if let Some(element) = ElementRef::wrap(node) {
-                if element.parent().is_some() && self.selector.matches(&element) {
-                    return Some(element);
+            match ElementRef::wrap(node) {
+                Some(element) => {
+                    if element.parent().is_some() && self.selector.matches(&element) {
+                        return Some(element);
+                    }
                 }
+                None => {}
             }
         }
         None
@@ -127,12 +118,11 @@ impl<'a, 'b> Iterator for Select<'a, 'b> {
 
     fn size_hint(&self) -> (usize, Option<usize>) {
         let (_lower, upper) = self.inner.size_hint();
-
         (0, upper)
     }
 }
 
-impl<'a, 'b> DoubleEndedIterator for Select<'a, 'b> {
+impl<'a, 'b> DoubleEndedIterator for HtmlSelect<'a, 'b> {
     fn next_back(&mut self) -> Option<Self::Item> {
         for node in self.inner.by_ref().rev() {
             if let Some(element) = ElementRef::wrap(node) {

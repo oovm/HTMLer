@@ -1,25 +1,19 @@
-# scraper
-
-[![crates.io](https://img.shields.io/crates/v/scraper?color=dark-green)][crate]
-[![downloads](https://img.shields.io/crates/d/scraper)][crate]
-[![test](https://github.com/causal-agent/scraper/actions/workflows/test.yml/badge.svg)][tests]
-
 HTML parsing and querying with CSS selectors.
 
 `scraper` is on [Crates.io][crate] and [GitHub][github].
 
 [crate]: https://crates.io/crates/scraper
-[github]: https://github.com/causal-agent/scraper
-[tests]: https://github.com/causal-agent/scraper/actions/workflows/test.yml
+[github]: https://github.com/programble/scraper
 
-Scraper provides an interface to Servo's `html5ever` and `selectors` crates, for browser-grade parsing and querying.
+Scraper provides an interface to Servo's `html5ever` and `selectors` crates, for browser-grade
+parsing and querying.
 
-## Examples
+# Examples
 
-### Parsing a document
+## Parsing a document
 
-```rust
-use scraper::Html;
+```
+use htmler::Html;
 
 let html = r#"
     <!DOCTYPE html>
@@ -31,24 +25,24 @@ let html = r#"
 let document = Html::parse_document(html);
 ```
 
-### Parsing a fragment
+## Parsing a fragment
 
-```rust
+```
 use scraper::Html;
 let fragment = Html::parse_fragment("<h1>Hello, <i>world!</i></h1>");
 ```
 
-### Parsing a selector
+## Parsing a selector
 
-```rust
-use scraper::Selector;
+```
+use htmler::Selector;
 let selector = Selector::parse("h1.foo").unwrap();
 ```
 
-### Selecting elements
+## Selecting elements
 
-```rust
-use scraper::{Html, Selector};
+```
+use htmler::{Html, Selector};
 
 let html = r#"
     <ul>
@@ -66,10 +60,10 @@ for element in fragment.select(&selector) {
 }
 ```
 
-### Selecting descendent elements
+## Selecting descendent elements
 
-```rust
-use scraper::{Html, Selector};
+```
+use htmler::{Html, Selector};
 
 let html = r#"
     <ul>
@@ -89,10 +83,10 @@ for element in ul.select(&li_selector) {
 }
 ```
 
-### Accessing element attributes
+## Accessing element attributes
 
-```rust
-use scraper::{Html, Selector};
+```
+use htmler::{Html, Selector};
 
 let fragment = Html::parse_fragment(r#"<input name="foo" value="bar">"#);
 let selector = Selector::parse(r#"input[name="foo"]"#).unwrap();
@@ -101,10 +95,10 @@ let input = fragment.select(&selector).next().unwrap();
 assert_eq!(Some("bar"), input.value().attr("value"));
 ```
 
-### Serializing HTML and inner HTML
+## Serializing HTML and inner HTML
 
-```rust
-use scraper::{Html, Selector};
+```
+use htmler::{Html, Selector};
 
 let fragment = Html::parse_fragment("<h1>Hello, <i>world!</i></h1>");
 let selector = Selector::parse("h1").unwrap();
@@ -115,10 +109,10 @@ assert_eq!("<h1>Hello, <i>world!</i></h1>", h1.html());
 assert_eq!("Hello, <i>world!</i>", h1.inner_html());
 ```
 
-### Accessing descendent text
+## Accessing descendent text
 
-```rust
-use scraper::{Html, Selector};
+```
+use htmler::{Html, Selector};
 
 let fragment = Html::parse_fragment("<h1>Hello, <i>world!</i></h1>");
 let selector = Selector::parse("h1").unwrap();
@@ -128,9 +122,3 @@ let text = h1.text().collect::<Vec<_>>();
 
 assert_eq!(vec!["Hello, ", "world!"], text);
 ```
-
-## Contributing
-
-Please feel free to open pull requests. If you're planning on implementing
-something big (i.e. not fixing a typo, a small bug fix, minor refactor, etc)
-then please open an issue first.

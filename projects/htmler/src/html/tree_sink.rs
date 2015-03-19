@@ -1,6 +1,6 @@
 use super::Html;
 use crate::{
-    node::{Comment, Doctype, Element, Node, ProcessingInstruction, Text},
+    node::{Doctype, Element, Node, ProcessingInstruction, Text},
     tendril_util::make as make_tendril,
 };
 use ego_tree::NodeId;
@@ -42,7 +42,7 @@ impl TreeSink for Html {
     // When creating a template element (name.ns.expanded() == expanded_name!(html "template")), an
     // associated document fragment called the "template contents" should also be created. Later
     // calls to self.get_template_contents() with that given element return it.
-    fn create_element(&mut self, name: QualName, attrs: Vec<Attribute>, _flags: ElementFlags) -> Self::Handle {
+    fn create_element(&mut self, name: QualName, attrs: Vec<Attribute>, flags: ElementFlags) -> Self::Handle {
         let mut node = self.tree.orphan(Node::Element(Element::new(name.clone(), attrs)));
         if name.expanded() == expanded_name!(html "template") {
             node.append(Node::Fragment);
@@ -52,7 +52,7 @@ impl TreeSink for Html {
 
     // Create a comment node.
     fn create_comment(&mut self, text: StrTendril) -> Self::Handle {
-        self.tree.orphan(Node::Comment(Comment { comment: make_tendril(text) })).id()
+        self.tree.orphan(Node::Comment(make_tendril(text))).id()
     }
 
     // Create Processing Instruction.
@@ -116,7 +116,9 @@ impl TreeSink for Html {
     }
 
     // Mark a HTML <script> element as "already started".
-    fn mark_script_already_started(&mut self, _node: &Self::Handle) {}
+    fn mark_script_already_started(&mut self, node: &Self::Handle) {
+        println!("mark_script_already_started: {:?}", node);
+    }
 
     // Get a handle to a template's template contents.
     //

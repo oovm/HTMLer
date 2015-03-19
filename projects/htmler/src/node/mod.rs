@@ -20,7 +20,7 @@ pub enum Node {
     /// A doctype.
     Doctype(Doctype),
     /// A comment.
-    Comment(Comment),
+    Comment(HtmlStr),
     /// Text.
     Text(Text),
     /// An element.
@@ -69,7 +69,7 @@ impl Node {
     }
 
     /// Returns self as a comment.
-    pub fn as_comment(&self) -> Option<&Comment> {
+    pub fn as_comment(&self) -> Option<&HtmlStr> {
         match *self {
             Node::Comment(ref c) => Some(c),
             _ => None,
@@ -147,27 +147,6 @@ impl Doctype {
 impl fmt::Debug for Doctype {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         write!(f, "<!DOCTYPE {} PUBLIC {:?} {:?}>", self.name(), self.public_id(), self.system_id())
-    }
-}
-
-/// An HTML comment.
-#[derive(Clone, PartialEq, Eq)]
-pub struct Comment {
-    /// The comment text.
-    pub comment: HtmlStr,
-}
-
-impl Deref for Comment {
-    type Target = str;
-
-    fn deref(&self) -> &str {
-        self.comment.deref()
-    }
-}
-
-impl fmt::Debug for Comment {
-    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        write!(f, "<!-- {:?} -->", self.deref())
     }
 }
 
