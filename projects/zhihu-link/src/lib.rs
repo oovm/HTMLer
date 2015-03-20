@@ -5,26 +5,19 @@ mod errors;
 
 use std::io::Write;
 
-pub use errors::{Error, ZhihuResult};
+pub use errors::{ZhihuError, ZhihuResult};
 
 pub use crate::answers::ZhihuAnswer;
 
 #[tokio::test]
 async fn test_reqwest() {
-    let url = "https://www.zhihu.com/question/{}/answer/{}";
-    let client = reqwest::Client::new();
-    let resp = client.get(url).send().await.unwrap();
-    let text = resp.text().await.unwrap();
-    // write to file
-    let mut file = std::fs::File::create("test.html").unwrap();
-    file.write_all(text.as_bytes()).unwrap();
+    let answer = ZhihuAnswer::new(347662352, 847873806).await.unwrap();
+    answer.save("test.md").await.unwrap();
 }
 
-#[test]
-fn test_parse() {
-    let mut zhihu = ZhihuAnswer::new();
-    zhihu.parse(include_str!("test.html")).unwrap();
-    println!("{:#?}", zhihu);
-    let mut file = std::fs::File::create("test.md").unwrap();
-    file.write_all(zhihu.to_string().as_bytes()).unwrap();
+#[tokio::test]
+async fn test_reqwest2() {
+    let answer = ZhihuAnswer::request(347662352, 847873806).await.unwrap();
+    let mut file = std::fs::File::create("test.html").unwrap();
+    file.write_all(answer.as_bytes()).unwrap();
 }

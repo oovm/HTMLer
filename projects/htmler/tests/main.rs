@@ -3,7 +3,7 @@ fn ready() {
     println!("it works!")
 }
 
-use htmler::{Html, Selector};
+use htmler::{node::Element, Html, Selector};
 
 #[test]
 fn tag_with_newline() {
@@ -21,4 +21,17 @@ fn tag_with_newline() {
     let mut iter = document.select(&selector);
     let a = iter.next().unwrap();
     assert_eq!(a.value().get_attribute("href"), Some("https://github.com/causal-agent/scraper"));
+}
+
+#[test]
+fn main() {
+    let fragment = Html::parse_fragment("<h1><script>Hello, world!</script></h1>");
+    for node in fragment.root_element().descendants() {
+        match node.value().as_element() {
+            None => {}
+            Some(s) => {
+                println!("{:#?}", s);
+            }
+        }
+    }
 }

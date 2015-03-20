@@ -16,7 +16,7 @@ impl<'a> Element for ElementRef<'a> {
     }
 
     fn parent_element(&self) -> Option<Self> {
-        self.parent().and_then(ElementRef::wrap)
+        self.node.parent().and_then(ElementRef::wrap)
     }
 
     fn parent_node_is_shadow_root(&self) -> bool {
@@ -32,11 +32,11 @@ impl<'a> Element for ElementRef<'a> {
     }
 
     fn prev_sibling_element(&self) -> Option<Self> {
-        self.prev_siblings().find(|sibling| sibling.value().is_element()).map(ElementRef::new)
+        self.node.prev_siblings().find(|sibling| sibling.value().is_element()).map(ElementRef::new)
     }
 
     fn next_sibling_element(&self) -> Option<Self> {
-        self.next_siblings().find(|sibling| sibling.value().is_element()).map(ElementRef::new)
+        self.node.next_siblings().find(|sibling| sibling.value().is_element()).map(ElementRef::new)
     }
 
     fn is_html_element_in_html_document(&self) -> bool {
@@ -98,7 +98,7 @@ impl<'a> Element for ElementRef<'a> {
     }
 
     fn has_class(&self, name: &CssLocalName, case_sensitivity: CaseSensitivity) -> bool {
-        self.value().has_class(&name.0, case_sensitivity)
+        self.value().classes().any(|c| case_sensitivity.eq(c.as_bytes(), name.0.as_bytes()))
     }
 
     fn imported_part(&self, _: &CssLocalName) -> Option<CssLocalName> {
@@ -110,11 +110,11 @@ impl<'a> Element for ElementRef<'a> {
     }
 
     fn is_empty(&self) -> bool {
-        !self.children().any(|child| child.value().is_element() || child.value().is_text())
+        !self.children().any(|child| child.node.value().is_element() || child.node.value().is_text())
     }
 
     fn is_root(&self) -> bool {
-        self.parent().map_or(false, |parent| parent.value().is_document())
+        self.node.parent().map_or(false, |parent| parent.value().is_document())
     }
 }
 

@@ -1,6 +1,6 @@
 use super::Html;
 use crate::{
-    node::{Doctype, Element, Node, ProcessingInstruction, Text},
+    node::{Doctype, Element, Node, ProcessingInstruction},
     tendril_util::make as make_tendril,
 };
 use ego_tree::NodeId;
@@ -43,6 +43,9 @@ impl TreeSink for Html {
     // associated document fragment called the "template contents" should also be created. Later
     // calls to self.get_template_contents() with that given element return it.
     fn create_element(&mut self, name: QualName, attrs: Vec<Attribute>, flags: ElementFlags) -> Self::Handle {
+        if flags.template {
+            // todo: support template
+        }
         let mut node = self.tree.orphan(Node::Element(Element::new(name.clone(), attrs)));
         if name.expanded() == expanded_name!(html "template") {
             node.append(Node::Fragment);
@@ -81,12 +84,12 @@ impl TreeSink for Html {
                 if can_concat {
                     let mut last_child = parent.last_child().unwrap();
                     match *last_child.value() {
-                        Node::Text(ref mut t) => t.text.push_tendril(&text),
+                        Node::Text(ref mut t) => t.push_tendril(&text),
                         _ => unreachable!(),
                     }
                 }
                 else {
-                    parent.append(Node::Text(Text { text }));
+                    parent.append(Node::Text(text));
                 }
             }
         }
@@ -117,7 +120,7 @@ impl TreeSink for Html {
 
     // Mark a HTML <script> element as "already started".
     fn mark_script_already_started(&mut self, node: &Self::Handle) {
-        println!("mark_script_already_started: {:?}", node);
+        let _ = node;
     }
 
     // Get a handle to a template's template contents.
@@ -165,12 +168,12 @@ impl TreeSink for Html {
                     if can_concat {
                         let mut prev_sibling = sibling.prev_sibling().unwrap();
                         match *prev_sibling.value() {
-                            Node::Text(ref mut t) => t.text.push_tendril(&text),
+                            Node::Text(ref mut t) => t.push_tendril(&text),
                             _ => unreachable!(),
                         }
                     }
                     else {
-                        sibling.insert_before(Node::Text(Text { text }));
+                        sibling.insert_before(Node::Text(text));
                     }
                 }
             }

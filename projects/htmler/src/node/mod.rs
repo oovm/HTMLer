@@ -1,14 +1,16 @@
 //! HTML nodes.
 
+use fmt::Debug;
 use std::cell::OnceCell;
 
 use std::{fmt, ops::Deref, slice::Iter as SliceIter};
 
 use crate::{CaseSensitivity, HtmlStr};
 use html5ever::{Attribute, LocalName, QualName};
+use indexmap::IndexMap;
 
 /// An HTML node.
-// `Element` is usally the most common variant and hence boxing it
+// `Element` is usually the most common variant and hence boxing it
 // will most likely not improve performance overall.
 #[allow(variant_size_differences)]
 #[derive(Clone, PartialEq, Eq)]
@@ -22,7 +24,7 @@ pub enum Node {
     /// A comment.
     Comment(HtmlStr),
     /// Text.
-    Text(Text),
+    Text(HtmlStr),
     /// An element.
     Element(Element),
     /// A processing instruction.
@@ -77,7 +79,7 @@ impl Node {
     }
 
     /// Returns self as text.
-    pub fn as_text(&self) -> Option<&Text> {
+    pub fn as_text(&self) -> Option<&HtmlStr> {
         match *self {
             Node::Text(ref t) => Some(t),
             _ => None,
@@ -102,16 +104,16 @@ impl Node {
 }
 
 // Always use one line.
-impl fmt::Debug for Node {
+impl Debug for Node {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        match *self {
+        match self {
             Node::Document => write!(f, "Document"),
             Node::Fragment => write!(f, "Fragment"),
-            Node::Doctype(ref d) => write!(f, "Doctype({:?})", d),
-            Node::Comment(ref c) => write!(f, "Comment({:?})", c),
-            Node::Text(ref t) => write!(f, "Text({:?})", t),
-            Node::Element(ref e) => write!(f, "Element({:?})", e),
-            Node::ProcessingInstruction(ref pi) => write!(f, "ProcessingInstruction({:?})", pi),
+            Node::Doctype(d) => write!(f, "Doctype({:?})", d),
+            Node::Comment(c) => write!(f, "Comment({:?})", c),
+            Node::Text(t) => write!(f, "Text({:?})", t),
+            Node::Element(e) => write!(f, "Element({:?})", e),
+            Node::ProcessingInstruction(pi) => write!(f, "ProcessingInstruction({:?})", pi),
         }
     }
 }
@@ -144,41 +146,17 @@ impl Doctype {
     }
 }
 
-impl fmt::Debug for Doctype {
+impl Debug for Doctype {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         write!(f, "<!DOCTYPE {} PUBLIC {:?} {:?}>", self.name(), self.public_id(), self.system_id())
     }
 }
 
-/// HTML text.
-#[derive(Clone, PartialEq, Eq)]
-pub struct Text {
-    /// The text.
-    pub text: HtmlStr,
-}
-
-impl Deref for Text {
-    type Target = str;
-
-    fn deref(&self) -> &str {
-        self.text.deref()
-    }
-}
-
-impl fmt::Debug for Text {
-    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        write!(f, "{:?}", self.deref())
-    }
-}
-
-/// A Map of attributes that preserves the order of the attributes.
-pub type Attributes = indexmap::IndexMap<QualName, HtmlStr>;
-
 /// An HTML element.
 #[derive(Clone, PartialEq, Eq)]
 pub struct Element {
     pub(crate) name: QualName,
-    pub(crate) attrs: Attributes,
+    pub(crate) attrs: IndexMap<QualName, HtmlStr>,
     id: OnceCell<Option<HtmlStr>>,
     classes: OnceCell<Vec<LocalName>>,
 }
@@ -209,8 +187,8 @@ impl Element {
     }
 
     /// Returns true if element has the class.
-    pub fn has_class(&self, class: &str, case_sensitive: CaseSensitivity) -> bool {
-        self.classes().any(|c| case_sensitive.eq(c.as_bytes(), class.as_bytes()))
+    pub fn has_class(&self, class: &str) -> bool {
+        self.classes().any(|c| CaseSensitivity::AsciiCaseInsensitive.eq(c.as_bytes(), class.as_bytes()))
     }
 
     /// Returns an iterator over the element's classes.
@@ -283,7 +261,7 @@ impl<'a> Iterator for HtmlAttributes<'a> {
     }
 }
 
-impl fmt::Debug for Element {
+impl Debug for Element {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         write!(f, "<{}", self.name())?;
         for (key, value) in self.attributes() {

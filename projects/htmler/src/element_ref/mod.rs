@@ -1,11 +1,6 @@
 //! Element references.
 
-use std::ops::Deref;
-
-use ego_tree::{
-    iter::{Edge, Traverse},
-    NodeRef,
-};
+use ego_tree::iter::{Children, Edge, Traverse};
 use html5ever::serialize::{serialize, SerializeOpts, TraversalScope};
 
 use crate::{node::Element, Node, Selector};
@@ -16,7 +11,7 @@ use crate::{node::Element, Node, Selector};
 /// matched against CSS selectors.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ElementRef<'a> {
-    node: NodeRef<'a, Node>,
+    pub(crate) node: NodeRef<'a, Node>,
 }
 
 impl<'a> ElementRef<'a> {
@@ -36,7 +31,7 @@ impl<'a> ElementRef<'a> {
 
     /// Returns an iterator over descendent elements matching a selector.
     pub fn select<'b>(&self, selector: &'b Selector) -> Select<'a, 'b> {
-        let mut inner = self.traverse();
+        let mut inner = self.node.traverse();
         inner.next(); // Skip Edge::Open(self).
 
         Select { scope: *self, inner, selector }
@@ -65,16 +60,19 @@ impl<'a> ElementRef<'a> {
 
     /// Returns an iterator over descendent text nodes.
     pub fn text(&self) -> Text<'a> {
-        Text { inner: self.traverse() }
+        Text { inner: self.node.traverse() }
+    }
+    pub fn children(&self) -> impl Iterator<Item = ElementRef<'a>> {
+        self.node.children().map(ElementRef::new)
     }
 }
 
-impl<'a> Deref for ElementRef<'a> {
-    type Target = NodeRef<'a, Node>;
-    fn deref(&self) -> &NodeRef<'a, Node> {
-        &self.node
-    }
-}
+// impl<'a> Deref for ElementRef<'a> {
+//     type Target = NodeRef<'a, Node>;
+//     fn deref(&self) -> &NodeRef<'a, Node> {
+//         &self.node
+//     }
+// }
 
 /// Iterator over descendent elements matching a selector.
 #[derive(Debug, Clone)]

@@ -6,6 +6,6 @@ use crate::ElementRef;
 
 impl<'a> Serialize for ElementRef<'a> {
     fn serialize<S: Serializer>(&self, serializer: &mut S, traversal_scope: TraversalScope) -> Result<(), Error> {
-        crate::node::serializable::serialize(**self, serializer, traversal_scope)
+        crate::node::serializable::serialize(self.node, serializer, traversal_scope)
     }
 }

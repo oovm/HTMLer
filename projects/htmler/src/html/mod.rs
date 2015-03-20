@@ -106,7 +106,7 @@ impl<'a, 'b> Iterator for HtmlSelect<'a, 'b> {
         for node in self.inner.by_ref() {
             match ElementRef::wrap(node) {
                 Some(element) => {
-                    if element.parent().is_some() && self.selector.matches(&element) {
+                    if element.node.parent().is_some() && self.selector.matches(&element) {
                         return Some(element);
                     }
                 }
@@ -126,7 +126,7 @@ impl<'a, 'b> DoubleEndedIterator for HtmlSelect<'a, 'b> {
     fn next_back(&mut self) -> Option<Self::Item> {
         for node in self.inner.by_ref().rev() {
             if let Some(element) = ElementRef::wrap(node) {
-                if element.parent().is_some() && self.selector.matches(&element) {
+                if element.node.parent().is_some() && self.selector.matches(&element) {
                     return Some(element);
                 }
             }
