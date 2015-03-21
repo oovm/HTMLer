@@ -1,12 +1,10 @@
 use crate::{ZhihuError, ZhihuResult};
+use htmler::{Element, Html, Node, Selector};
 use std::{
-    fmt::{Display, Formatter},
+    fmt::{Display, Formatter, Write},
     path::Path,
     str::FromStr,
 };
-
-use ego_tree::NodeRef;
-use htmler::{Html, Node, Selector};
 use tokio::io::AsyncWriteExt;
 
 #[derive(Debug)]
@@ -66,7 +64,7 @@ impl ZhihuAnswer {
         let selector = Selector::new("h1.QuestionHeader-title");
         let _: Option<_> = try {
             let node = html.select(&selector).next()?;
-            let text = node.first_child()?.value().as_text()?;
+            let text = node.first_child()?.as_text()?;
             self.title = text.to_string();
         };
         Ok(())
@@ -75,7 +73,7 @@ impl ZhihuAnswer {
         let selector = Selector::new("div.QuestionRichText");
         let _: Option<_> = try {
             for node in html.select(&selector) {
-                let text = node.first_child()?.value().as_text()?;
+                let text = node.first_child()?.as_text()?;
                 println!("text: {:?}", text);
             }
         };
@@ -92,8 +90,8 @@ impl ZhihuAnswer {
         };
         Ok(())
     }
-    fn read_content_node(&mut self, node: NodeRef<Node>) -> ZhihuResult<()> {
-        match node.value() {
+    fn read_content_node(&mut self, node: Element) -> ZhihuResult<()> {
+        match node.as_node() {
             Node::Document => {
                 println!("document")
             }
@@ -120,9 +118,9 @@ impl ZhihuAnswer {
                     "span" => {
                         // math mode
                         if e.has_class("ztext-math") {
-                            for child in node.first_children() {
+                            for child in node.descendants() {
                                 println!("child: {:?}", child.value());
-                                match child.value().as_element() {
+                                match child.as_element() {
                                     Some(s) => {
                                         println!("element: {:?}", s);
                                     }
@@ -158,8 +156,12 @@ impl ZhihuAnswer {
                         self.content.push_str("\n");
                     }
                     "figure" => {
-                        for child in node.descendants() {
-                            // data-original
+                        for child in node.descendants().filter(|e| e.has_class("img")) {
+                            let original = child.get_attribute("data-original");
+                            if !original.is_empty() {
+                                write!(self.content, "![]({})", original)?;
+                                break;
+                            }
                         }
                     }
                     unknown => panic!("unknown element: {unknown}"),

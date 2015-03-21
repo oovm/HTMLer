@@ -78,14 +78,6 @@ impl Node {
         }
     }
 
-    /// Returns self as text.
-    pub fn as_text(&self) -> Option<&HtmlStr> {
-        match *self {
-            Node::Text(ref t) => Some(t),
-            _ => None,
-        }
-    }
-
     /// Returns self as an element.
     pub fn as_element(&self) -> Option<&ElementData> {
         match *self {

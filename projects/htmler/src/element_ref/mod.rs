@@ -1,12 +1,12 @@
 //! Element references.
 
+use crate::{node::ElementData, HtmlStr, Node, Selector};
 use ego_tree::{
     iter::{Edge, Traverse},
     NodeRef,
 };
 use html5ever::serialize::{serialize, SerializeOpts, TraversalScope};
-
-use crate::{node::ElementData, HtmlStr, Node, Selector};
+use selectors::Element as _;
 
 /// Wrapper around a reference to an element node.
 ///
@@ -78,16 +78,15 @@ impl<'a> Element<'a> {
         self.node.last_child().map(Element::new)
     }
     /// Returns the parent element.
-    pub fn as_node(&self) -> &'a Node {
-        self.node.value()
-    }
-    /// Returns the parent element.
     pub fn as_element(&self) -> Option<&'a ElementData> {
         self.node.value().as_element()
     }
     /// Returns the parent element.
     pub fn as_text(&self) -> Option<&'a HtmlStr> {
-        self.node.value().as_text()
+        match self.node.value() {
+            Node::Text(t) => Some(t),
+            _ => None,
+        }
     }
     /// Returns the parent element.
     pub fn descendants(&self) -> impl Iterator<Item = Element<'a>> {
