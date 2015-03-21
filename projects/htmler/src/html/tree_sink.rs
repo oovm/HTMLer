@@ -1,6 +1,6 @@
 use super::Html;
 use crate::{
-    node::{Doctype, Element, Node, ProcessingInstruction},
+    node::{Doctype, ElementData, Node, ProcessingInstruction},
     tendril_util::make as make_tendril,
 };
 use ego_tree::NodeId;
@@ -46,7 +46,7 @@ impl TreeSink for Html {
         if flags.template {
             // todo: support template
         }
-        let mut node = self.tree.orphan(Node::Element(Element::new(name.clone(), attrs)));
+        let mut node = self.tree.orphan(Node::Element(ElementData::new(name.clone(), attrs)));
         if name.expanded() == expanded_name!(html "template") {
             node.append(Node::Fragment);
         }

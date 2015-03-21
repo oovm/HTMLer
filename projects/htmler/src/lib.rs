@@ -1,6 +1,5 @@
 #![feature(once_cell)]
 #![doc = include_str!("../readme.md")]
-
 #![warn(
     missing_docs,
     missing_debug_implementations,
@@ -16,9 +15,9 @@
 #[macro_use]
 extern crate html5ever;
 
-pub use crate::{element_ref::ElementRef, html::Html, node::Node, selector::Selector};
+pub use crate::{element_ref::Element, html::Html, node::Node, selector::Selector};
 
-pub use selectors::{attr::CaseSensitivity, Element};
+pub use selectors::attr::CaseSensitivity;
 
 pub mod element_ref;
 pub mod error;

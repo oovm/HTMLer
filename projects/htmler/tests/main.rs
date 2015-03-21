@@ -3,7 +3,7 @@ fn ready() {
     println!("it works!")
 }
 
-use htmler::{node::Element, Html, Selector};
+use htmler::{node::ElementData, Html, Selector};
 
 #[test]
 fn tag_with_newline() {

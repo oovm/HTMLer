@@ -6,7 +6,7 @@ use ego_tree::{iter::Nodes, Tree};
 use html5ever::{driver, serialize, serialize::SerializeOpts, tree_builder::QuirksMode, QualName};
 use tendril::TendrilSink;
 
-use crate::{selector::Selector, ElementRef, Node};
+use crate::{selector::Selector, Element, Node};
 
 /// An HTML tree.
 ///
@@ -74,9 +74,9 @@ impl Html {
     }
 
     /// Returns the root `<html>` element.
-    pub fn root_element(&self) -> ElementRef {
+    pub fn root_element(&self) -> Element {
         let root_node = self.tree.root().children().find(|child| child.value().is_element()).expect("html node missing");
-        ElementRef::wrap(root_node).unwrap()
+        Element::wrap(root_node).unwrap()
     }
 
     /// Serialize entire document into HTML.
@@ -100,11 +100,11 @@ pub struct HtmlSelect<'a, 'b> {
 }
 
 impl<'a, 'b> Iterator for HtmlSelect<'a, 'b> {
-    type Item = ElementRef<'a>;
+    type Item = Element<'a>;
 
-    fn next(&mut self) -> Option<ElementRef<'a>> {
+    fn next(&mut self) -> Option<Element<'a>> {
         for node in self.inner.by_ref() {
-            match ElementRef::wrap(node) {
+            match Element::wrap(node) {
                 Some(element) => {
                     if element.node.parent().is_some() && self.selector.matches(&element) {
                         return Some(element);
@@ -125,7 +125,7 @@ impl<'a, 'b> Iterator for HtmlSelect<'a, 'b> {
 impl<'a, 'b> DoubleEndedIterator for HtmlSelect<'a, 'b> {
     fn next_back(&mut self) -> Option<Self::Item> {
         for node in self.inner.by_ref().rev() {
-            if let Some(element) = ElementRef::wrap(node) {
+            if let Some(element) = Element::wrap(node) {
                 if element.node.parent().is_some() && self.selector.matches(&element) {
                     return Some(element);
                 }

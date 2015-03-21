@@ -7,7 +7,7 @@ use smallvec::SmallVec;
 use html5ever::{LocalName, Namespace};
 use selectors::{matching, parser, parser::SelectorParseErrorKind};
 
-use crate::{error::SelectorErrorKind, ElementRef};
+use crate::{error::SelectorErrorKind, Element};
 
 /// Wrapper around CSS selectors.
 ///
@@ -35,14 +35,14 @@ impl Selector {
     }
 
     /// Returns true if the element matches this selector.
-    pub fn matches(&self, element: &ElementRef) -> bool {
+    pub fn matches(&self, element: &Element) -> bool {
         self.matches_with_scope(element, None)
     }
 
     /// Returns true if the element matches this selector.
     /// The optional `scope` argument is used to specify which element has `:scope` pseudo-class.
     /// When it is `None`, `:scope` will match the root element.
-    pub fn matches_with_scope(&self, element: &ElementRef, scope: Option<ElementRef>) -> bool {
+    pub fn matches_with_scope(&self, element: &Element, scope: Option<Element>) -> bool {
         let mut context =
             matching::MatchingContext::new(matching::MatchingMode::Normal, None, None, matching::QuirksMode::NoQuirks);
         context.scope_element = scope.map(|x| selectors::Element::opaque(&x));

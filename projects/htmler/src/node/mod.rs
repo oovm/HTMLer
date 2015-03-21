@@ -26,7 +26,7 @@ pub enum Node {
     /// Text.
     Text(HtmlStr),
     /// An element.
-    Element(Element),
+    Element(ElementData),
     /// A processing instruction.
     ProcessingInstruction(ProcessingInstruction),
 }
@@ -87,7 +87,7 @@ impl Node {
     }
 
     /// Returns self as an element.
-    pub fn as_element(&self) -> Option<&Element> {
+    pub fn as_element(&self) -> Option<&ElementData> {
         match *self {
             Node::Element(ref e) => Some(e),
             _ => None,
@@ -154,19 +154,18 @@ impl Debug for Doctype {
 
 /// An HTML element.
 #[derive(Clone, PartialEq, Eq)]
-pub struct Element {
+pub struct ElementData {
     pub(crate) name: QualName,
     pub(crate) attrs: IndexMap<QualName, HtmlStr>,
     id: OnceCell<Option<HtmlStr>>,
     classes: OnceCell<Vec<LocalName>>,
 }
 
-impl Element {
+impl ElementData {
     #[doc(hidden)]
     pub fn new(name: QualName, attributes: Vec<Attribute>) -> Self {
         let attrs = attributes.into_iter().map(|a| (a.name, crate::tendril_util::make(a.value))).collect();
-
-        Element { attrs, name, id: OnceCell::new(), classes: OnceCell::new() }
+        ElementData { attrs, name, id: OnceCell::new(), classes: OnceCell::new() }
     }
 
     /// Returns the element attributes.
@@ -261,7 +260,7 @@ impl<'a> Iterator for HtmlAttributes<'a> {
     }
 }
 
-impl Debug for Element {
+impl Debug for ElementData {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         write!(f, "<{}", self.name())?;
         for (key, value) in self.attributes() {
