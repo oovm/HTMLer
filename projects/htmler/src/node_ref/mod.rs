@@ -1,34 +1,43 @@
 //! Element references.
 
-use crate::{node::ElementData, HtmlStr, Node, Selector};
+use crate::{
+    node::{Doctype, NodeData, ProcessingInstruction},
+    HtmlStr, NodeKind, Selector,
+};
 use ego_tree::{
     iter::{Edge, Traverse},
     NodeRef,
 };
 use html5ever::serialize::{serialize, SerializeOpts, TraversalScope};
-use selectors::Element as _;
+use std::fmt::{Debug, Formatter};
 
 /// Wrapper around a reference to an element node.
 ///
 /// This wrapper implements the `Element` trait from the `selectors` crate, which allows it to be
 /// matched against CSS selectors.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Element<'a> {
-    pub(crate) node: NodeRef<'a, Node>,
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub struct Node<'a> {
+    pub(crate) node: NodeRef<'a, NodeKind>,
 }
 
-impl<'a> Element<'a> {
-    fn new(node: NodeRef<'a, Node>) -> Self {
-        Element { node }
+impl<'a> Debug for Node<'a> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.debug_tuple("ElementHandler").field(&self.node.id()).finish()
+    }
+}
+
+impl<'a> Node<'a> {
+    fn new(node: NodeRef<'a, NodeKind>) -> Self {
+        Node { node }
     }
 
     /// Wraps a `NodeRef` only if it references a `Node::Element`.
-    pub fn wrap(node: NodeRef<'a, Node>) -> Option<Self> {
-        if node.value().is_element() { Some(Element::new(node)) } else { None }
+    pub fn wrap(node: NodeRef<'a, NodeKind>) -> Option<Self> {
+        if node.value().is_element() { Some(Node::new(node)) } else { None }
     }
 
     /// Returns the `Element` referenced by `self`.
-    pub fn value(&self) -> &'a ElementData {
+    pub fn value(&self) -> &'a NodeData {
         self.node.value().as_element().unwrap()
     }
 
@@ -66,44 +75,85 @@ impl<'a> Element<'a> {
         Text { inner: self.node.traverse() }
     }
     /// Returns an iterator over descendent elements.
-    pub fn children(&self) -> impl Iterator<Item = Element<'a>> {
-        self.node.children().map(Element::new)
+    pub fn children(&self) -> impl Iterator<Item = Node<'a>> {
+        self.node.children().map(Node::new)
     }
     /// Returns the first child element.
-    pub fn first_child(&self) -> Option<Element<'a>> {
-        self.node.first_child().map(Element::new)
+    pub fn first_child(&self) -> Option<Node<'a>> {
+        self.node.first_child().map(Node::new)
     }
     /// Returns the last child element.
-    pub fn last_child(&self) -> Option<Element<'a>> {
-        self.node.last_child().map(Element::new)
+    pub fn last_child(&self) -> Option<Node<'a>> {
+        self.node.last_child().map(Node::new)
+    }
+
+    /// Returns the parent element.
+    pub fn descendants(&self) -> impl Iterator<Item = Node<'a>> {
+        self.node.descendants().map(Node::new)
     }
     /// Returns the parent element.
-    pub fn as_element(&self) -> Option<&'a ElementData> {
-        self.node.value().as_element()
+    pub fn had_class(&self, class: &str) -> bool {
+        self.value().has_class(class)
     }
     /// Returns the parent element.
-    pub fn as_text(&self) -> Option<&'a HtmlStr> {
-        match self.node.value() {
-            Node::Text(t) => Some(t),
+    pub fn has_attribute(&self, name: &str) -> bool {
+        self.value().has_attribute(name)
+    }
+    /// Returns the value of an attribute.
+    pub fn get_attribute(&self, name: &str) -> &'a str {
+        self.value().get_attribute(name).unwrap_or("")
+    }
+}
+
+impl<'a> Node<'a> {
+    /// Checks if the element is of the given type.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use htmler::{Node, Html};
+    /// let e = Html::parse_fragment("<p></p>").root_element();
+    /// assert!(e.is_a("p"));
+    /// assert!(!e.is_a("div"));
+    /// ```
+    pub fn is_a<S: AsRef<str>>(&self, element: S) -> bool {
+        self.value().is_a(element.as_ref())
+    }
+    /// Returns the next sibling element.
+    pub fn as_node(&self) -> &'a NodeKind {
+        self.node.value()
+    }
+    /// Returns the parent element.
+    pub fn as_element(&self) -> Option<&'a NodeData> {
+        self.as_node().as_element()
+    }
+    /// Returns the parent element.
+    pub fn as_doctype(&self) -> Option<&'a Doctype> {
+        match self.as_node() {
+            NodeKind::Doctype(t) => Some(t),
             _ => None,
         }
     }
     /// Returns the parent element.
-    pub fn descendants(&self) -> impl Iterator<Item = Element<'a>> {
-        self.node.descendants().map(Element::new)
+    pub fn as_text(&self) -> Option<&'a HtmlStr> {
+        match self.as_node() {
+            NodeKind::Text(t) => Some(t),
+            _ => None,
+        }
+    }
+    /// Returns self as an element.
+    pub fn as_processing_instruction(&self) -> Option<&ProcessingInstruction> {
+        match self.as_node() {
+            NodeKind::ProcessingInstruction(ref pi) => Some(pi),
+            _ => None,
+        }
     }
     /// Returns the parent element.
-    pub fn has_class(&self, class: &str) -> bool {
-        self.value().has_class(class)
-    }
-
-    pub fn has_attribute(&self, name: &str) -> bool {
-        self.value().has_attribute(name)
-    }
-
-    /// Returns the value of an attribute.
-    pub fn get_attribute(&self, name: &str) -> &'a str {
-        self.value().get_attribute(name).unwrap_or("")
+    pub fn as_comment(&self) -> Option<&'a HtmlStr> {
+        match self.as_node() {
+            NodeKind::Comment(t) => Some(t),
+            _ => None,
+        }
     }
 }
 
@@ -117,18 +167,18 @@ impl<'a> Element<'a> {
 /// Iterator over descendent elements matching a selector.
 #[derive(Debug, Clone)]
 pub struct Select<'a, 'b> {
-    scope: Element<'a>,
-    inner: Traverse<'a, Node>,
+    scope: Node<'a>,
+    inner: Traverse<'a, NodeKind>,
     selector: &'b Selector,
 }
 
 impl<'a, 'b> Iterator for Select<'a, 'b> {
-    type Item = Element<'a>;
+    type Item = Node<'a>;
 
-    fn next(&mut self) -> Option<Element<'a>> {
+    fn next(&mut self) -> Option<Node<'a>> {
         for edge in &mut self.inner {
             if let Edge::Open(node) = edge {
-                if let Some(element) = Element::wrap(node) {
+                if let Some(element) = Node::wrap(node) {
                     if self.selector.matches_with_scope(&element, Some(self.scope)) {
                         return Some(element);
                     }
@@ -142,7 +192,7 @@ impl<'a, 'b> Iterator for Select<'a, 'b> {
 /// Iterator over descendent text nodes.
 #[derive(Debug, Clone)]
 pub struct Text<'a> {
-    inner: Traverse<'a, Node>,
+    inner: Traverse<'a, NodeKind>,
 }
 
 impl<'a> Iterator for Text<'a> {
@@ -151,7 +201,7 @@ impl<'a> Iterator for Text<'a> {
     fn next(&mut self) -> Option<&'a str> {
         for edge in &mut self.inner {
             if let Edge::Open(node) = edge {
-                if let Node::Text(ref text) = node.value() {
+                if let NodeKind::Text(ref text) = node.value() {
                     return Some(&**text);
                 }
             }

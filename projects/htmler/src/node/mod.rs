@@ -14,7 +14,7 @@ use indexmap::IndexMap;
 // will most likely not improve performance overall.
 #[allow(variant_size_differences)]
 #[derive(Clone, PartialEq, Eq)]
-pub enum Node {
+pub enum NodeKind {
     /// The document root.
     Document,
     /// The fragment root.
@@ -26,86 +26,62 @@ pub enum Node {
     /// Text.
     Text(HtmlStr),
     /// An element.
-    Element(ElementData),
+    Element(NodeData),
     /// A processing instruction.
     ProcessingInstruction(ProcessingInstruction),
 }
 
-impl Node {
+impl NodeKind {
     /// Returns true if node is the document root.
     pub fn is_document(&self) -> bool {
-        matches!(*self, Node::Document)
+        matches!(*self, NodeKind::Document)
     }
 
     /// Returns true if node is the fragment root.
     pub fn is_fragment(&self) -> bool {
-        matches!(*self, Node::Fragment)
+        matches!(*self, NodeKind::Fragment)
     }
 
     /// Returns true if node is a doctype.
     pub fn is_doctype(&self) -> bool {
-        matches!(*self, Node::Doctype(_))
+        matches!(*self, NodeKind::Doctype(_))
     }
 
     /// Returns true if node is a comment.
     pub fn is_comment(&self) -> bool {
-        matches!(*self, Node::Comment(_))
+        matches!(*self, NodeKind::Comment(_))
     }
 
     /// Returns true if node is text.
     pub fn is_text(&self) -> bool {
-        matches!(*self, Node::Text(_))
+        matches!(*self, NodeKind::Text(_))
     }
 
     /// Returns true if node is an element.
     pub fn is_element(&self) -> bool {
-        matches!(*self, Node::Element(_))
-    }
-
-    /// Returns self as a doctype.
-    pub fn as_doctype(&self) -> Option<&Doctype> {
-        match *self {
-            Node::Doctype(ref d) => Some(d),
-            _ => None,
-        }
-    }
-
-    /// Returns self as a comment.
-    pub fn as_comment(&self) -> Option<&HtmlStr> {
-        match *self {
-            Node::Comment(ref c) => Some(c),
-            _ => None,
-        }
+        matches!(*self, NodeKind::Element(_))
     }
 
     /// Returns self as an element.
-    pub fn as_element(&self) -> Option<&ElementData> {
+    pub fn as_element(&self) -> Option<&NodeData> {
         match *self {
-            Node::Element(ref e) => Some(e),
-            _ => None,
-        }
-    }
-
-    /// Returns self as an element.
-    pub fn as_processing_instruction(&self) -> Option<&ProcessingInstruction> {
-        match *self {
-            Node::ProcessingInstruction(ref pi) => Some(pi),
+            NodeKind::Element(ref e) => Some(e),
             _ => None,
         }
     }
 }
 
 // Always use one line.
-impl Debug for Node {
+impl Debug for NodeKind {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         match self {
-            Node::Document => write!(f, "Document"),
-            Node::Fragment => write!(f, "Fragment"),
-            Node::Doctype(d) => write!(f, "Doctype({:?})", d),
-            Node::Comment(c) => write!(f, "Comment({:?})", c),
-            Node::Text(t) => write!(f, "Text({:?})", t),
-            Node::Element(e) => write!(f, "Element({:?})", e),
-            Node::ProcessingInstruction(pi) => write!(f, "ProcessingInstruction({:?})", pi),
+            NodeKind::Document => write!(f, "Document"),
+            NodeKind::Fragment => write!(f, "Fragment"),
+            NodeKind::Doctype(d) => write!(f, "Doctype({:?})", d),
+            NodeKind::Comment(c) => write!(f, "Comment({:?})", c),
+            NodeKind::Text(t) => write!(f, "Text({:?})", t),
+            NodeKind::Element(e) => write!(f, "Element({:?})", e),
+            NodeKind::ProcessingInstruction(pi) => write!(f, "ProcessingInstruction({:?})", pi),
         }
     }
 }
@@ -146,23 +122,30 @@ impl Debug for Doctype {
 
 /// An HTML element.
 #[derive(Clone, PartialEq, Eq)]
-pub struct ElementData {
+pub struct NodeData {
     pub(crate) name: QualName,
     pub(crate) attrs: IndexMap<QualName, HtmlStr>,
     id: OnceCell<Option<HtmlStr>>,
     classes: OnceCell<Vec<LocalName>>,
 }
 
-impl ElementData {
+impl NodeData {
     #[doc(hidden)]
     pub fn new(name: QualName, attributes: Vec<Attribute>) -> Self {
         let attrs = attributes.into_iter().map(|a| (a.name, crate::tendril_util::make(a.value))).collect();
-        ElementData { attrs, name, id: OnceCell::new(), classes: OnceCell::new() }
+        NodeData { attrs, name, id: OnceCell::new(), classes: OnceCell::new() }
     }
 
-    /// Returns the element attributes.
-    pub fn is_a(&self, name: &str) -> bool {
-        self.name.local.as_ref().eq_ignore_ascii_case(name)
+    /// Chick if element is the given tag
+    ///
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use htmler::node::NodeData;
+    /// ```
+    pub fn is_a(&self, tag: &str) -> bool {
+        self.name.local.as_ref().eq_ignore_ascii_case(tag)
     }
 
     /// Returns the element name.
@@ -252,7 +235,7 @@ impl<'a> Iterator for HtmlAttributes<'a> {
     }
 }
 
-impl Debug for ElementData {
+impl Debug for NodeData {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         write!(f, "<{}", self.name())?;
         for (key, value) in self.attributes() {

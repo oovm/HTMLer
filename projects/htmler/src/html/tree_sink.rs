@@ -1,6 +1,6 @@
 use super::Html;
 use crate::{
-    node::{Doctype, ElementData, Node, ProcessingInstruction},
+    node::{Doctype, NodeData, NodeKind, ProcessingInstruction},
     tendril_util::make as make_tendril,
 };
 use ego_tree::NodeId;
@@ -46,23 +46,23 @@ impl TreeSink for Html {
         if flags.template {
             // todo: support template
         }
-        let mut node = self.tree.orphan(Node::Element(ElementData::new(name.clone(), attrs)));
+        let mut node = self.tree.orphan(NodeKind::Element(NodeData::new(name.clone(), attrs)));
         if name.expanded() == expanded_name!(html "template") {
-            node.append(Node::Fragment);
+            node.append(NodeKind::Fragment);
         }
         node.id()
     }
 
     // Create a comment node.
     fn create_comment(&mut self, text: StrTendril) -> Self::Handle {
-        self.tree.orphan(Node::Comment(make_tendril(text))).id()
+        self.tree.orphan(NodeKind::Comment(make_tendril(text))).id()
     }
 
     // Create Processing Instruction.
     fn create_pi(&mut self, target: StrTendril, data: StrTendril) -> Self::Handle {
         let target = make_tendril(target);
         let data = make_tendril(data);
-        self.tree.orphan(Node::ProcessingInstruction(ProcessingInstruction { target, data })).id()
+        self.tree.orphan(NodeKind::ProcessingInstruction(ProcessingInstruction { target, data })).id()
     }
 
     // Append a node as the last child of the given node. If this would produce adjacent sibling
@@ -84,12 +84,12 @@ impl TreeSink for Html {
                 if can_concat {
                     let mut last_child = parent.last_child().unwrap();
                     match *last_child.value() {
-                        Node::Text(ref mut t) => t.push_tendril(&text),
+                        NodeKind::Text(ref mut t) => t.push_tendril(&text),
                         _ => unreachable!(),
                     }
                 }
                 else {
-                    parent.append(Node::Text(text));
+                    parent.append(NodeKind::Text(text));
                 }
             }
         }
@@ -115,7 +115,7 @@ impl TreeSink for Html {
         let public_id = make_tendril(public_id);
         let system_id = make_tendril(system_id);
         let doctype = Doctype { name, public_id, system_id };
-        self.tree.root_mut().append(Node::Doctype(doctype));
+        self.tree.root_mut().append(NodeKind::Doctype(doctype));
     }
 
     // Mark a HTML <script> element as "already started".
@@ -168,12 +168,12 @@ impl TreeSink for Html {
                     if can_concat {
                         let mut prev_sibling = sibling.prev_sibling().unwrap();
                         match *prev_sibling.value() {
-                            Node::Text(ref mut t) => t.push_tendril(&text),
+                            NodeKind::Text(ref mut t) => t.push_tendril(&text),
                             _ => unreachable!(),
                         }
                     }
                     else {
-                        sibling.insert_before(Node::Text(text));
+                        sibling.insert_before(NodeKind::Text(text));
                     }
                 }
             }
@@ -185,7 +185,7 @@ impl TreeSink for Html {
     fn add_attrs_if_missing(&mut self, target: &Self::Handle, attrs: Vec<Attribute>) {
         let mut node = self.tree.get_mut(*target).unwrap();
         let element = match *node.value() {
-            Node::Element(ref mut e) => e,
+            NodeKind::Element(ref mut e) => e,
             _ => unreachable!(),
         };
 

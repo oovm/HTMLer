@@ -15,14 +15,14 @@
 #[macro_use]
 extern crate html5ever;
 
-pub use crate::{element_ref::Element, html::Html, node::Node, selector::Selector};
+pub use crate::{html::Html, node::NodeKind, node_ref::Node, selector::Selector};
 
 pub use selectors::attr::CaseSensitivity;
 
-pub mod element_ref;
 pub mod error;
 pub mod html;
 pub mod node;
+pub mod node_ref;
 pub mod selector;
 
 #[cfg(feature = "atomic")]

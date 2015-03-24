@@ -1,5 +1,5 @@
 use crate::{ZhihuError, ZhihuResult};
-use htmler::{Element, Html, Node, Selector};
+use htmler::{Html, Node, NodeKind, Selector};
 use std::{
     fmt::{Display, Formatter, Write},
     path::Path,
@@ -90,24 +90,24 @@ impl ZhihuAnswer {
         };
         Ok(())
     }
-    fn read_content_node(&mut self, node: Element) -> ZhihuResult<()> {
+    fn read_content_node(&mut self, node: Node) -> ZhihuResult<()> {
         match node.as_node() {
-            Node::Document => {
+            NodeKind::Document => {
                 println!("document")
             }
-            Node::Fragment => {
+            NodeKind::Fragment => {
                 println!("fragment")
             }
-            Node::Doctype(_) => {
+            NodeKind::Doctype(_) => {
                 println!("doctype")
             }
-            Node::Comment(_) => {
+            NodeKind::Comment(_) => {
                 println!("comment")
             }
-            Node::Text(t) => {
+            NodeKind::Text(t) => {
                 self.content.push_str(t.trim());
             }
-            Node::Element(e) => {
+            NodeKind::Element(e) => {
                 match e.name() {
                     "p" => {
                         for child in node.children() {
@@ -167,7 +167,7 @@ impl ZhihuAnswer {
                     unknown => panic!("unknown element: {unknown}"),
                 }
             }
-            Node::ProcessingInstruction(_) => {
+            NodeKind::ProcessingInstruction(_) => {
                 println!("processing instruction");
             }
         }

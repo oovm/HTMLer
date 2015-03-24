@@ -5,9 +5,12 @@ use std::{convert::TryFrom, fmt};
 use smallvec::SmallVec;
 
 use html5ever::{LocalName, Namespace};
-use selectors::{matching, parser, parser::SelectorParseErrorKind};
+use selectors::{
+    matching,
+    parser::{SelectorList, SelectorParseErrorKind},
+};
 
-use crate::{error::SelectorErrorKind, Element};
+use crate::{error::SelectorErrorKind, Node};
 
 /// Wrapper around CSS selectors.
 ///
@@ -15,7 +18,7 @@ use crate::{error::SelectorErrorKind, Element};
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Selector {
     /// The CSS selectors.
-    selectors: SmallVec<[parser::Selector<Simple>; 1]>,
+    selectors: SmallVec<[selectors::parser::Selector<Simple>; 1]>,
 }
 
 impl Selector {
@@ -29,20 +32,18 @@ impl Selector {
         let mut parser_input = cssparser::ParserInput::new(selectors);
         let mut parser = cssparser::Parser::new(&mut parser_input);
 
-        parser::SelectorList::parse(&Parser, &mut parser)
-            .map(|list| Selector { selectors: list.0 })
-            .map_err(SelectorErrorKind::from)
+        SelectorList::parse(&Parser, &mut parser).map(|list| Selector { selectors: list.0 }).map_err(SelectorErrorKind::from)
     }
 
     /// Returns true if the element matches this selector.
-    pub fn matches(&self, element: &Element) -> bool {
+    pub fn matches(&self, element: &Node) -> bool {
         self.matches_with_scope(element, None)
     }
 
     /// Returns true if the element matches this selector.
     /// The optional `scope` argument is used to specify which element has `:scope` pseudo-class.
     /// When it is `None`, `:scope` will match the root element.
-    pub fn matches_with_scope(&self, element: &Element, scope: Option<Element>) -> bool {
+    pub fn matches_with_scope(&self, element: &Node, scope: Option<Node>) -> bool {
         let mut context =
             matching::MatchingContext::new(matching::MatchingMode::Normal, None, None, matching::QuirksMode::NoQuirks);
         context.scope_element = scope.map(|x| selectors::Element::opaque(&x));
@@ -53,7 +54,7 @@ impl Selector {
 /// An implementation of `Parser` for `selectors`
 struct Parser;
 
-impl<'i> parser::Parser<'i> for Parser {
+impl<'i> selectors::parser::Parser<'i> for Parser {
     type Impl = Simple;
     type Error = SelectorParseErrorKind<'i>;
 }
@@ -62,7 +63,7 @@ impl<'i> parser::Parser<'i> for Parser {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Simple;
 
-impl parser::SelectorImpl for Simple {
+impl selectors::parser::SelectorImpl for Simple {
     // see: https://github.com/servo/servo/pull/19747#issuecomment-357106065
     type ExtraMatchingData = String;
     type AttrValue = CssString;
@@ -126,7 +127,7 @@ impl cssparser::ToCss for CssLocalName {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum NonTSPseudoClass {}
 
-impl parser::NonTSPseudoClass for NonTSPseudoClass {
+impl selectors::parser::NonTSPseudoClass for NonTSPseudoClass {
     type Impl = Simple;
 
     fn is_active_or_hover(&self) -> bool {
@@ -151,7 +152,7 @@ impl cssparser::ToCss for NonTSPseudoClass {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PseudoElement {}
 
-impl parser::PseudoElement for PseudoElement {
+impl selectors::parser::PseudoElement for PseudoElement {
     type Impl = Simple;
 }
 

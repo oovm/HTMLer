@@ -1,8 +1,5 @@
-extern crate scraper;
-
+use htmler::{Html, Selector};
 use std::io::{self, Read, Write};
-
-use scraper::{Html, Selector};
 
 fn main() {
     let mut input = String::new();
@@ -12,7 +9,7 @@ fn main() {
     write!(stdout, "CSS selector: ").unwrap();
     stdout.flush().unwrap();
     stdin.read_line(&mut input).unwrap();
-    let selector = Selector::parse(&input).unwrap();
+    let selector = Selector::new(&input);
 
     write!(stdout, "HTML document:\n").unwrap();
     stdout.flush().unwrap();

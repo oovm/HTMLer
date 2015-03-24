@@ -1,4 +1,4 @@
-use crate::Element;
+use crate::Node;
 use html5ever::Namespace;
 use selectors::{
     attr::{AttrSelectorOperation, CaseSensitivity, NamespaceConstraint},
@@ -8,7 +8,7 @@ use selectors::{
 use crate::selector::{CssLocalName, CssString, NonTSPseudoClass, PseudoElement, Simple};
 
 /// Note: will never match against non-tree-structure pseudo-classes.
-impl<'a> selectors::Element for Element<'a> {
+impl<'a> selectors::Element for Node<'a> {
     type Impl = Simple;
 
     fn opaque(&self) -> OpaqueElement {
@@ -16,7 +16,7 @@ impl<'a> selectors::Element for Element<'a> {
     }
 
     fn parent_element(&self) -> Option<Self> {
-        self.node.parent().and_then(Element::wrap)
+        self.node.parent().and_then(Node::wrap)
     }
 
     fn parent_node_is_shadow_root(&self) -> bool {
@@ -32,11 +32,11 @@ impl<'a> selectors::Element for Element<'a> {
     }
 
     fn prev_sibling_element(&self) -> Option<Self> {
-        self.node.prev_siblings().find(|sibling| sibling.value().is_element()).map(Element::new)
+        self.node.prev_siblings().find(|sibling| sibling.value().is_element()).map(Node::new)
     }
 
     fn next_sibling_element(&self) -> Option<Self> {
-        self.node.next_siblings().find(|sibling| sibling.value().is_element()).map(Element::new)
+        self.node.next_siblings().find(|sibling| sibling.value().is_element()).map(Node::new)
     }
 
     fn is_html_element_in_html_document(&self) -> bool {

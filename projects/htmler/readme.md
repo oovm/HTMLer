@@ -36,7 +36,7 @@ let fragment = Html::parse_fragment("<h1>Hello, <i>world!</i></h1>");
 
 ```
 use htmler::Selector;
-let selector = Selector::parse("h1.foo").unwrap();
+let selector = Selector::new("h1.foo");
 ```
 
 ## Selecting elements
@@ -53,7 +53,7 @@ let html = r#"
 "#;
 
 let fragment = Html::parse_fragment(html);
-let selector = Selector::parse("li").unwrap();
+let selector = Selector::new("li");
 
 for element in fragment.select(&selector) {
     assert_eq!("li", element.value().name());
@@ -74,8 +74,8 @@ let html = r#"
 "#;
 
 let fragment = Html::parse_fragment(html);
-let ul_selector = Selector::parse("ul").unwrap();
-let li_selector = Selector::parse("li").unwrap();
+let ul_selector = Selector::new("ul");
+let li_selector = Selector::new("li");
 
 let ul = fragment.select(&ul_selector).next().unwrap();
 for element in ul.select(&li_selector) {

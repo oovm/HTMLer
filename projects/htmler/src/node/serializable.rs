@@ -3,11 +3,11 @@ use std::io::Error;
 use ego_tree::{iter::Edge, NodeRef};
 use html5ever::serialize::{Serializer, TraversalScope};
 
-use crate::Node;
+use crate::NodeKind;
 
 /// Serialize an HTML node using html5ever serializer.
 pub(crate) fn serialize<S: Serializer>(
-    self_node: NodeRef<Node>,
+    self_node: NodeRef<NodeKind>,
     serializer: &mut S,
     traversal_scope: TraversalScope,
 ) -> Result<(), Error> {
@@ -19,16 +19,16 @@ pub(crate) fn serialize<S: Serializer>(
                 }
 
                 match *node.value() {
-                    Node::Doctype(ref doctype) => {
+                    NodeKind::Doctype(ref doctype) => {
                         serializer.write_doctype(doctype.name())?;
                     }
-                    Node::Comment(ref comment) => {
+                    NodeKind::Comment(ref comment) => {
                         serializer.write_comment(comment)?;
                     }
-                    Node::Text(ref text) => {
+                    NodeKind::Text(ref text) => {
                         serializer.write_text(text)?;
                     }
-                    Node::Element(ref elem) => {
+                    NodeKind::Element(ref elem) => {
                         let attrs = elem.attrs.iter().map(|(k, v)| (k, &v[..]));
                         serializer.start_elem(elem.name.clone(), attrs)?;
                     }
