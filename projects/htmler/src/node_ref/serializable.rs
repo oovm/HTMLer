@@ -6,6 +6,6 @@ use crate::Node;
 
 impl<'a> Serialize for Node<'a> {
     fn serialize<S: Serializer>(&self, serializer: &mut S, traversal_scope: TraversalScope) -> Result<(), Error> {
-        crate::node::serializable::serialize(self.node, serializer, traversal_scope)
+        crate::node::serializable::serialize(self.ptr, serializer, traversal_scope)
     }
 }

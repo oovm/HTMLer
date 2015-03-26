@@ -19,6 +19,6 @@ mod tests {
         let src =
             r#"<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"></head><body><p>Hello world!</p></body></html>"#;
         let html = Html::parse_document(src);
-        assert_eq!(html.html(), src);
+        assert_eq!(html.as_html(), src);
     }
 }

@@ -3,7 +3,12 @@
 use std::borrow::Cow;
 
 use ego_tree::{iter::Nodes, Tree};
-use html5ever::{driver, serialize, serialize::SerializeOpts, tree_builder::QuirksMode, QualName};
+use html5ever::{
+    driver, serialize,
+    serialize::{SerializeOpts, TraversalScope},
+    tree_builder::QuirksMode,
+    QualName,
+};
 use tendril::TendrilSink;
 
 use crate::{selector::Selector, Node, NodeKind};
@@ -80,10 +85,10 @@ impl Html {
     }
 
     /// Serialize entire document into HTML.
-    pub fn html(&self) -> String {
+    pub fn as_html(&self) -> String {
         let opts = SerializeOpts {
             scripting_enabled: true, // It's not clear what this does.
-            traversal_scope: html5ever::serialize::TraversalScope::IncludeNode,
+            traversal_scope: TraversalScope::IncludeNode,
             create_missing_parent: false,
         };
         let mut buf = Vec::new();
@@ -106,7 +111,7 @@ impl<'a, 'b> Iterator for HtmlSelect<'a, 'b> {
         for node in self.inner.by_ref() {
             match Node::wrap(node) {
                 Some(element) => {
-                    if element.node.parent().is_some() && self.selector.matches(&element) {
+                    if element.ptr.parent().is_some() && self.selector.matches(&element) {
                         return Some(element);
                     }
                 }
@@ -117,7 +122,7 @@ impl<'a, 'b> Iterator for HtmlSelect<'a, 'b> {
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let (_lower, upper) = self.inner.size_hint();
+        let (_, upper) = self.inner.size_hint();
         (0, upper)
     }
 }
@@ -126,7 +131,7 @@ impl<'a, 'b> DoubleEndedIterator for HtmlSelect<'a, 'b> {
     fn next_back(&mut self) -> Option<Self::Item> {
         for node in self.inner.by_ref().rev() {
             if let Some(element) = Node::wrap(node) {
-                if element.node.parent().is_some() && self.selector.matches(&element) {
+                if element.ptr.parent().is_some() && self.selector.matches(&element) {
                     return Some(element);
                 }
             }

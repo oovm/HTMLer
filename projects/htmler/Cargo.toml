@@ -1,6 +1,6 @@
 [package]
 name = "htmler"
-version = "0.0.1"
+version = "0.0.2"
 description = "HTML parsing and querying with CSS selectors"
 repository = "https://github.com/causal-agent/scraper"
 documentation = "https://docs.rs/htmler"

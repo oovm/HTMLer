@@ -91,7 +91,7 @@ impl ZhihuAnswer {
         Ok(())
     }
     fn read_content_node(&mut self, node: Node) -> ZhihuResult<()> {
-        match node.as_node() {
+        match node.as_kind() {
             NodeKind::Document => {
                 println!("document")
             }
@@ -120,7 +120,7 @@ impl ZhihuAnswer {
                         if e.has_class("ztext-math") {
                             for child in node.descendants() {
                                 println!("child: {:?}", child.value());
-                                match child.as_element() {
+                                match child.as_data() {
                                     Some(s) => {
                                         println!("element: {:?}", s);
                                     }

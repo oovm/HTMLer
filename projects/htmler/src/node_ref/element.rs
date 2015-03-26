@@ -12,11 +12,11 @@ impl<'a> selectors::Element for Node<'a> {
     type Impl = Simple;
 
     fn opaque(&self) -> OpaqueElement {
-        OpaqueElement::new(self.node.value())
+        OpaqueElement::new(self.ptr.value())
     }
 
     fn parent_element(&self) -> Option<Self> {
-        self.node.parent().and_then(Node::wrap)
+        self.ptr.parent().and_then(Node::wrap)
     }
 
     fn parent_node_is_shadow_root(&self) -> bool {
@@ -32,11 +32,11 @@ impl<'a> selectors::Element for Node<'a> {
     }
 
     fn prev_sibling_element(&self) -> Option<Self> {
-        self.node.prev_siblings().find(|sibling| sibling.value().is_element()).map(Node::new)
+        self.ptr.prev_siblings().find(|sibling| sibling.value().is_element()).map(Node::new)
     }
 
     fn next_sibling_element(&self) -> Option<Self> {
-        self.node.next_siblings().find(|sibling| sibling.value().is_element()).map(Node::new)
+        self.ptr.next_siblings().find(|sibling| sibling.value().is_element()).map(Node::new)
     }
 
     fn is_html_element_in_html_document(&self) -> bool {
@@ -110,11 +110,11 @@ impl<'a> selectors::Element for Node<'a> {
     }
 
     fn is_empty(&self) -> bool {
-        !self.children().any(|child| child.node.value().is_element() || child.node.value().is_text())
+        !self.children().any(|child| child.ptr.value().is_element() || child.ptr.value().is_text())
     }
 
     fn is_root(&self) -> bool {
-        self.node.parent().map_or(false, |parent| parent.value().is_document())
+        self.ptr.parent().map_or(false, |parent| parent.value().is_document())
     }
 }
 
@@ -123,6 +123,7 @@ mod tests {
     use crate::{
         html::Html,
         selector::{CssLocalName, Selector},
+        Node,
     };
     use selectors::{attr::CaseSensitivity, Element};
 
@@ -162,12 +163,18 @@ mod tests {
         let fragment = Html::parse_fragment(html);
         let sel = Selector::try_parse("p").unwrap();
         let element = fragment.select(&sel).next().unwrap();
-        assert_eq!(true, element.has_class(&CssLocalName::from("my_class"), CaseSensitivity::CaseSensitive));
+        assert_eq!(
+            true,
+            <Node as Element>::has_class(&element, &CssLocalName::from("my_class"), CaseSensitivity::CaseSensitive)
+        );
 
         let html = "<p>hey there</p>";
         let fragment = Html::parse_fragment(html);
         let sel = Selector::try_parse("p").unwrap();
         let element = fragment.select(&sel).next().unwrap();
-        assert_eq!(false, element.has_class(&CssLocalName::from("my_class"), CaseSensitivity::CaseSensitive));
+        assert_eq!(
+            false,
+            <Node as Element>::has_class(&element, &CssLocalName::from("my_class"), CaseSensitivity::CaseSensitive)
+        );
     }
 }

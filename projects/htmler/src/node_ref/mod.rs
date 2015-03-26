@@ -17,18 +17,18 @@ use std::fmt::{Debug, Formatter};
 /// matched against CSS selectors.
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Node<'a> {
-    pub(crate) node: NodeRef<'a, NodeKind>,
+    pub(crate) ptr: NodeRef<'a, NodeKind>,
 }
 
 impl<'a> Debug for Node<'a> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.debug_tuple("ElementHandler").field(&self.node.id()).finish()
+        f.debug_tuple("ElementHandler").field(&self.ptr.id()).finish()
     }
 }
 
 impl<'a> Node<'a> {
     fn new(node: NodeRef<'a, NodeKind>) -> Self {
-        Node { node }
+        Node { ptr: node }
     }
 
     /// Wraps a `NodeRef` only if it references a `Node::Element`.
@@ -38,12 +38,12 @@ impl<'a> Node<'a> {
 
     /// Returns the `Element` referenced by `self`.
     pub fn value(&self) -> &'a NodeData {
-        self.node.value().as_element().unwrap()
+        self.ptr.value().as_element().unwrap()
     }
 
     /// Returns an iterator over descendent elements matching a selector.
     pub fn select<'b>(&self, selector: &'b Selector) -> Select<'a, 'b> {
-        let mut inner = self.node.traverse();
+        let mut inner = self.ptr.traverse();
         inner.next(); // Skip Edge::Open(self).
 
         Select { scope: *self, inner, selector }
@@ -72,27 +72,27 @@ impl<'a> Node<'a> {
 
     /// Returns an iterator over descendent text nodes.
     pub fn text(&self) -> Text<'a> {
-        Text { inner: self.node.traverse() }
+        Text { inner: self.ptr.traverse() }
     }
     /// Returns an iterator over descendent elements.
     pub fn children(&self) -> impl Iterator<Item = Node<'a>> {
-        self.node.children().map(Node::new)
+        self.ptr.children().map(Node::new)
     }
     /// Returns the first child element.
     pub fn first_child(&self) -> Option<Node<'a>> {
-        self.node.first_child().map(Node::new)
+        self.ptr.first_child().map(Node::new)
     }
     /// Returns the last child element.
     pub fn last_child(&self) -> Option<Node<'a>> {
-        self.node.last_child().map(Node::new)
+        self.ptr.last_child().map(Node::new)
     }
 
     /// Returns the parent element.
     pub fn descendants(&self) -> impl Iterator<Item = Node<'a>> {
-        self.node.descendants().map(Node::new)
+        self.ptr.descendants().map(Node::new)
     }
     /// Returns the parent element.
-    pub fn had_class(&self, class: &str) -> bool {
+    pub fn has_class(&self, class: &str) -> bool {
         self.value().has_class(class)
     }
     /// Returns the parent element.
@@ -112,45 +112,46 @@ impl<'a> Node<'a> {
     ///
     /// ```
     /// # use htmler::{Node, Html};
-    /// let e = Html::parse_fragment("<p></p>").root_element();
-    /// assert!(e.is_a("p"));
-    /// assert!(!e.is_a("div"));
+    /// let html = Html::parse_fragment("<p>html</p>");
+    /// let node = html.root_element().first_child().unwrap();
+    /// assert!(node.is_a("p"));
+    /// assert!(!node.is_a("div"));
     /// ```
     pub fn is_a<S: AsRef<str>>(&self, element: S) -> bool {
         self.value().is_a(element.as_ref())
     }
     /// Returns the next sibling element.
-    pub fn as_node(&self) -> &'a NodeKind {
-        self.node.value()
+    pub fn as_kind(&self) -> &'a NodeKind {
+        self.ptr.value()
     }
     /// Returns the parent element.
-    pub fn as_element(&self) -> Option<&'a NodeData> {
-        self.as_node().as_element()
+    pub fn as_data(&self) -> Option<&'a NodeData> {
+        self.as_kind().as_element()
     }
     /// Returns the parent element.
     pub fn as_doctype(&self) -> Option<&'a Doctype> {
-        match self.as_node() {
+        match self.as_kind() {
             NodeKind::Doctype(t) => Some(t),
             _ => None,
         }
     }
     /// Returns the parent element.
     pub fn as_text(&self) -> Option<&'a HtmlStr> {
-        match self.as_node() {
+        match self.as_kind() {
             NodeKind::Text(t) => Some(t),
             _ => None,
         }
     }
     /// Returns self as an element.
     pub fn as_processing_instruction(&self) -> Option<&ProcessingInstruction> {
-        match self.as_node() {
+        match self.as_kind() {
             NodeKind::ProcessingInstruction(ref pi) => Some(pi),
             _ => None,
         }
     }
     /// Returns the parent element.
     pub fn as_comment(&self) -> Option<&'a HtmlStr> {
-        match self.as_node() {
+        match self.as_kind() {
             NodeKind::Comment(t) => Some(t),
             _ => None,
         }

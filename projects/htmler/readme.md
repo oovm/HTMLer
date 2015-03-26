@@ -28,7 +28,7 @@ let document = Html::parse_document(html);
 ## Parsing a fragment
 
 ```
-use scraper::Html;
+use htmler::Html;
 let fragment = Html::parse_fragment("<h1>Hello, <i>world!</i></h1>");
 ```
 
@@ -89,10 +89,10 @@ for element in ul.select(&li_selector) {
 use htmler::{Html, Selector};
 
 let fragment = Html::parse_fragment(r#"<input name="foo" value="bar">"#);
-let selector = Selector::parse(r#"input[name="foo"]"#).unwrap();
+let selector = Selector::new(r#"input[name="foo"]"#);
 
 let input = fragment.select(&selector).next().unwrap();
-assert_eq!(Some("bar"), input.value().attr("value"));
+assert_eq!("bar", input.get_attribute("value"));
 ```
 
 ## Serializing HTML and inner HTML
@@ -101,7 +101,7 @@ assert_eq!(Some("bar"), input.value().attr("value"));
 use htmler::{Html, Selector};
 
 let fragment = Html::parse_fragment("<h1>Hello, <i>world!</i></h1>");
-let selector = Selector::parse("h1").unwrap();
+let selector = Selector::new("h1");
 
 let h1 = fragment.select(&selector).next().unwrap();
 
@@ -115,7 +115,7 @@ assert_eq!("Hello, <i>world!</i>", h1.inner_html());
 use htmler::{Html, Selector};
 
 let fragment = Html::parse_fragment("<h1>Hello, <i>world!</i></h1>");
-let selector = Selector::parse("h1").unwrap();
+let selector = Selector::new("h1");
 
 let h1 = fragment.select(&selector).next().unwrap();
 let text = h1.text().collect::<Vec<_>>();
