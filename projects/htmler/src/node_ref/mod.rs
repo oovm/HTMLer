@@ -11,7 +11,7 @@ use ego_tree::{
 use html5ever::serialize::{serialize, SerializeOpts, TraversalScope};
 use std::fmt::{Debug, Formatter};
 
-/// Wrapper around a reference to an element node.
+/// A reference to the actual element node, most interfaces are based on this type.
 ///
 /// This wrapper implements the `Element` trait from the `selectors` crate, which allows it to be
 /// matched against CSS selectors.
@@ -34,11 +34,6 @@ impl<'a> Node<'a> {
     /// Wraps a `NodeRef` only if it references a `Node::Element`.
     pub fn wrap(node: NodeRef<'a, NodeKind>) -> Option<Self> {
         if node.value().is_element() { Some(Node::new(node)) } else { None }
-    }
-
-    /// Returns the `Element` referenced by `self`.
-    pub fn value(&self) -> &'a NodeData {
-        self.ptr.value().as_element().unwrap()
     }
 
     /// Returns an iterator over descendent elements matching a selector.
@@ -93,15 +88,15 @@ impl<'a> Node<'a> {
     }
     /// Returns the parent element.
     pub fn has_class(&self, class: &str) -> bool {
-        self.value().has_class(class)
+        self.as_data().unwrap().has_class(class)
     }
     /// Returns the parent element.
     pub fn has_attribute(&self, name: &str) -> bool {
-        self.value().has_attribute(name)
+        self.as_data().unwrap().has_attribute(name)
     }
     /// Returns the value of an attribute.
     pub fn get_attribute(&self, name: &str) -> &'a str {
-        self.value().get_attribute(name).unwrap_or("")
+        self.as_data().unwrap().get_attribute(name).unwrap_or("")
     }
 }
 
@@ -113,12 +108,12 @@ impl<'a> Node<'a> {
     /// ```
     /// # use htmler::{Node, Html};
     /// let html = Html::parse_fragment("<p>html</p>");
-    /// let node = html.root_element().first_child().unwrap();
+    /// let node = html.root_node().first_child().unwrap();
     /// assert!(node.is_a("p"));
     /// assert!(!node.is_a("div"));
     /// ```
     pub fn is_a<S: AsRef<str>>(&self, element: S) -> bool {
-        self.value().is_a(element.as_ref())
+        self.as_data().unwrap().is_a(element.as_ref())
     }
     /// Returns the next sibling element.
     pub fn as_kind(&self) -> &'a NodeKind {

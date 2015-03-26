@@ -118,24 +118,6 @@ impl ZhihuAnswer {
                     "span" => {
                         // math mode
                         if e.has_class("ztext-math") {
-                            for child in node.descendants() {
-                                println!("child: {:?}", child.value());
-                                match child.as_data() {
-                                    Some(s) => {
-                                        println!("element: {:?}", s);
-                                    }
-                                    _ => {}
-                                }
-
-                                // match child.value().as_element() {
-                                //     Some(s) if s.is_a("script") => {
-                                //         for class in e.classes() {
-                                //             println!("class: {}", class);
-                                //         }
-                                //     }
-                                //     _ => {}
-                                // }
-                            }
                             match e.get_attribute("data-tex") {
                                 Some(s) => {
                                     self.content.push_str(" $$");

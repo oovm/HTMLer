@@ -1,18 +1,12 @@
-HTML parsing and querying with CSS selectors.
+[htmler](https://github.com/oovm/zhihu-markdown/blob/dev/projects/htmler) is a html parsing library with css selectors.
 
-`scraper` is on [Crates.io][crate] and [GitHub][github].
-
-[crate]: https://crates.io/crates/scraper
-[github]: https://github.com/programble/scraper
-
-Scraper provides an interface to Servo's `html5ever` and `selectors` crates, for browser-grade
-parsing and querying.
+This is a fork of [scraper](https://github.com/causal-agent/scraper), and provides higher-level encapsulation and a more consistent interface.
 
 # Examples
 
-## Parsing a document
+## Parsing a document/fragment
 
-```
+```rs
 use htmler::Html;
 
 let html = r#"
@@ -23,25 +17,12 @@ let html = r#"
 "#;
 
 let document = Html::parse_document(html);
-```
-
-## Parsing a fragment
-
-```
-use htmler::Html;
 let fragment = Html::parse_fragment("<h1>Hello, <i>world!</i></h1>");
-```
-
-## Parsing a selector
-
-```
-use htmler::Selector;
-let selector = Selector::new("h1.foo");
 ```
 
 ## Selecting elements
 
-```
+```rs
 use htmler::{Html, Selector};
 
 let html = r#"
@@ -62,7 +43,7 @@ for element in fragment.select(&selector) {
 
 ## Selecting descendent elements
 
-```
+```rs
 use htmler::{Html, Selector};
 
 let html = r#"
@@ -85,7 +66,7 @@ for element in ul.select(&li_selector) {
 
 ## Accessing element attributes
 
-```
+```rs
 use htmler::{Html, Selector};
 
 let fragment = Html::parse_fragment(r#"<input name="foo" value="bar">"#);
@@ -97,7 +78,7 @@ assert_eq!("bar", input.get_attribute("value"));
 
 ## Serializing HTML and inner HTML
 
-```
+```rs
 use htmler::{Html, Selector};
 
 let fragment = Html::parse_fragment("<h1>Hello, <i>world!</i></h1>");
@@ -111,7 +92,7 @@ assert_eq!("Hello, <i>world!</i>", h1.inner_html());
 
 ## Accessing descendent text
 
-```
+```rs
 use htmler::{Html, Selector};
 
 let fragment = Html::parse_fragment("<h1>Hello, <i>world!</i></h1>");

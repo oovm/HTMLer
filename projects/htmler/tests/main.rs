@@ -26,7 +26,7 @@ fn tag_with_newline() {
 #[test]
 fn main() {
     let fragment = Html::parse_fragment("<h1><script>Hello, world!</script></h1>");
-    for node in fragment.root_element().descendants() {
+    for node in fragment.root_node().descendants() {
         match node.as_data() {
             None => {}
             Some(s) => {

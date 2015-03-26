@@ -23,10 +23,8 @@ use crate::{selector::Selector, Node, NodeKind};
 pub struct Html {
     /// Parse errors.
     pub errors: Vec<Cow<'static, str>>,
-
     /// The quirks mode.
     pub quirks_mode: QuirksMode,
-
     /// The node tree.
     pub tree: Tree<NodeKind>,
 }
@@ -79,7 +77,7 @@ impl Html {
     }
 
     /// Returns the root `<html>` element.
-    pub fn root_element(&self) -> Node {
+    pub fn root_node(&self) -> Node {
         let root_node = self.tree.root().children().find(|child| child.value().is_element()).expect("html node missing");
         Node::wrap(root_node).unwrap()
     }
@@ -150,7 +148,7 @@ mod tests {
     #[test]
     fn root_element_fragment() {
         let html = Html::parse_fragment(r#"<a href="http://github.com">1</a>"#);
-        let root_ref = html.root_element();
+        let root_ref = html.root_node();
         let href = root_ref.select(&Selector::try_parse("a").unwrap()).next().unwrap();
         assert_eq!(href.inner_html(), "1");
         assert_eq!(href.value().get_attribute("href").unwrap(), "http://github.com");
@@ -159,7 +157,7 @@ mod tests {
     #[test]
     fn root_element_document_doctype() {
         let html = Html::parse_document("<!DOCTYPE html>\n<title>abc</title>");
-        let root_ref = html.root_element();
+        let root_ref = html.root_node();
         let title = root_ref.select(&Selector::try_parse("title").unwrap()).next().unwrap();
         assert_eq!(title.inner_html(), "abc");
     }
@@ -167,7 +165,7 @@ mod tests {
     #[test]
     fn root_element_document_comment() {
         let html = Html::parse_document("<!-- comment --><title>abc</title>");
-        let root_ref = html.root_element();
+        let root_ref = html.root_node();
         let title = root_ref.select(&Selector::try_parse("title").unwrap()).next().unwrap();
         assert_eq!(title.inner_html(), "abc");
     }
