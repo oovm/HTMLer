@@ -40,9 +40,9 @@ pub(crate) fn serialize<S: Serializer>(
                 if node == self_node && traversal_scope == TraversalScope::ChildrenOnly(None) {
                     continue;
                 }
-
-                if let Some(elem) = node.value().as_element() {
-                    serializer.end_elem(elem.name.clone())?;
+                match node.value() {
+                    NodeKind::Element(e) => serializer.end_elem(e.name.clone())?,
+                    _ => {}
                 }
             }
         }

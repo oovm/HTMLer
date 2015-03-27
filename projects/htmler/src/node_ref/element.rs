@@ -45,11 +45,17 @@ impl<'a> selectors::Element for Node<'a> {
     }
 
     fn has_local_name(&self, name: &CssLocalName) -> bool {
-        self.as_data().unwrap().name.local == name.0
+        match self.as_data() {
+            Some(data) => data.name.local == name.0,
+            None => false,
+        }
     }
 
     fn has_namespace(&self, namespace: &Namespace) -> bool {
-        &self.as_data().unwrap().name.ns == namespace
+        match self.as_data() {
+            Some(data) => &data.name.ns == namespace,
+            None => false,
+        }
     }
 
     fn is_same_type(&self, other: &Self) -> bool {
@@ -83,7 +89,7 @@ impl<'a> selectors::Element for Node<'a> {
     }
 
     fn is_link(&self) -> bool {
-        self.as_data().unwrap().name() == "link"
+        self.is_a("link")
     }
 
     fn is_html_slot_element(&self) -> bool {

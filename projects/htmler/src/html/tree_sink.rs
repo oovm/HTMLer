@@ -34,7 +34,10 @@ impl TreeSink for Html {
     //
     // Should never be called on a non-element node; feel free to panic!.
     fn elem_name(&self, target: &Self::Handle) -> ExpandedName {
-        self.tree.get(*target).unwrap().value().as_element().unwrap().name.expanded()
+        match self.tree.get(*target).unwrap().value() {
+            NodeKind::Element(e) => e.name.expanded(),
+            _ => panic!("not an element"),
+        }
     }
 
     // Create an element.

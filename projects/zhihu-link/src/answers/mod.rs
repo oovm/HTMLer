@@ -2,10 +2,10 @@ use crate::{ZhihuError, ZhihuResult};
 use htmler::{Html, Node, NodeKind, Selector};
 use std::{
     fmt::{Display, Formatter, Write},
+    io::Write as _,
     path::Path,
     str::FromStr,
 };
-use tokio::io::AsyncWriteExt;
 
 #[derive(Debug)]
 pub struct ZhihuAnswer {
@@ -36,6 +36,14 @@ impl FromStr for ZhihuAnswer {
 }
 
 impl ZhihuAnswer {
+    /// 通过问题 ID 和回答 ID 获取知乎回答, 并渲染为 markdown
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use zhihu_link::ZhihuAnswer;
+    /// let answer = ZhihuAnswer::new(58151047, 1).await?;
+    /// ```
     pub async fn new(question: usize, answer: usize) -> ZhihuResult<Self> {
         let html = Self::request(question, answer).await?;
         Ok(html.parse()?)
@@ -45,12 +53,12 @@ impl ZhihuAnswer {
         let resp = reqwest::Client::new().get(url).send().await?;
         Ok(resp.text().await?)
     }
-    pub async fn save<P>(&self, path: P) -> ZhihuResult<()>
+    pub fn save<P>(&self, path: P) -> ZhihuResult<()>
     where
         P: AsRef<Path>,
     {
-        let mut file = tokio::fs::File::create(path).await?;
-        file.write_all(self.to_string().as_bytes()).await?;
+        let mut file = std::fs::File::create(path)?;
+        file.write_all(self.to_string().as_bytes())?;
         Ok(())
     }
     fn do_parse(&mut self, html: &str) -> ZhihuResult<()> {

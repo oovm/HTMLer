@@ -61,14 +61,6 @@ impl NodeKind {
     pub fn is_element(&self) -> bool {
         matches!(*self, NodeKind::Element(_))
     }
-
-    /// Returns self as an element.
-    pub fn as_element(&self) -> Option<&NodeData> {
-        match *self {
-            NodeKind::Element(ref e) => Some(e),
-            _ => None,
-        }
-    }
 }
 
 // Always use one line.

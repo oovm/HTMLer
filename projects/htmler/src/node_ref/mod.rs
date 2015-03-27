@@ -112,8 +112,14 @@ impl<'a> Node<'a> {
     /// assert!(node.is_a("p"));
     /// assert!(!node.is_a("div"));
     /// ```
-    pub fn is_a<S: AsRef<str>>(&self, element: S) -> bool {
-        self.as_data().unwrap().is_a(element.as_ref())
+    pub fn is_a<S>(&self, element: S) -> bool
+    where
+        S: AsRef<str>,
+    {
+        match self.as_data() {
+            Some(data) => data.is_a(element.as_ref()),
+            None => false,
+        }
     }
     /// Returns the next sibling element.
     pub fn as_kind(&self) -> &'a NodeKind {
@@ -121,7 +127,10 @@ impl<'a> Node<'a> {
     }
     /// Returns the parent element.
     pub fn as_data(&self) -> Option<&'a NodeData> {
-        self.as_kind().as_element()
+        match self.as_kind() {
+            NodeKind::Element(ref e) => Some(e),
+            _ => None,
+        }
     }
     /// Returns the parent element.
     pub fn as_doctype(&self) -> Option<&'a Doctype> {

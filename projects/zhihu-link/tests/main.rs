@@ -1,6 +1,3 @@
-use std::{io::Write, str::FromStr};
-use zhihu_link::ZhihuAnswer;
-
 #[test]
 fn ready() {
     println!("it works!")
