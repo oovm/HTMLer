@@ -10,6 +10,7 @@ license = "MPL-2.0"
 edition = "2021"
 
 [dependencies]
+serde_json = "1.0.96"
 reqwest = "0.11.16"
 ego-tree = "0.6.2"
 

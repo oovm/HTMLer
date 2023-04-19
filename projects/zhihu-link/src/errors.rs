@@ -22,3 +22,9 @@ impl From<std::fmt::Error> for ZhihuError {
         ZhihuError::UnknownError
     }
 }
+
+impl From<serde_json::Error> for ZhihuError {
+    fn from(_: serde_json::Error) -> Self {
+        ZhihuError::UnknownError
+    }
+}

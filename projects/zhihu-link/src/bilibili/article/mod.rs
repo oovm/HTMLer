@@ -9,24 +9,24 @@ use std::{
 };
 
 #[derive(Debug)]
-pub struct ZhihuArticle {
+pub struct BilibiliArticle {
     title: String,
     content: String,
 }
 
-impl Default for ZhihuArticle {
+impl Default for BilibiliArticle {
     fn default() -> Self {
         Self { title: "".to_string(), content: "".to_string() }
     }
 }
 
-impl Display for ZhihuArticle {
+impl Display for BilibiliArticle {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "# {}\n\n{}", self.title, self.content)
     }
 }
 
-impl FromStr for ZhihuArticle {
+impl FromStr for BilibiliArticle {
     type Err = ZhihuError;
 
     fn from_str(html: &str) -> Result<Self, Self::Err> {
@@ -40,7 +40,7 @@ static SELECT_CONTENT: LazyLock<Selector> = LazyLock::new(|| Selector::new("scri
 
 // script#js-initialData
 
-impl ZhihuArticle {
+impl BilibiliArticle {
     /// 通过问题 ID 和回答 ID 获取知乎回答, 并渲染为 markdown
     ///
     /// # Examples
@@ -54,7 +54,7 @@ impl ZhihuArticle {
         Ok(html.parse()?)
     }
     pub async fn request(article: usize) -> ZhihuResult<String> {
-        let url = format!("https://zhuanlan.zhihu.com/p/{article}");
+        let url = format!("https://www.bilibili.com/read/cv{article}");
         let resp = reqwest::Client::new().get(url).send().await?;
         Ok(resp.text().await?)
     }
