@@ -9,7 +9,7 @@ fn ready() {
 #[tokio::test]
 async fn test_reqwest() {
     let answer = BilibiliArticle::from_str(include_str!("../test_bilibili.html")).unwrap();
-    answer.save("test.md").unwrap();
+    answer.save("tests/bilibili/cv4079473.md").unwrap();
 }
 
 #[tokio::test]
@@ -18,7 +18,7 @@ async fn test_reqwest2() {
     save_string("test_answer.html", &answer).unwrap();
     let request = ZhihuArticle::request(438085414).await.unwrap();
     save_string("test_article.html", &request).unwrap();
-    let article = BilibiliArticle::request(403592).await.unwrap();
+    let article = BilibiliArticle::request(4079473).await.unwrap();
     save_string("test_bilibili.html", &article).unwrap();
 }
 

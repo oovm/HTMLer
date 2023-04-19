@@ -122,7 +122,7 @@ impl BilibiliArticle {
                 match e.name() {
                     "h1" => {
                         self.content.push_str("# ");
-                        self.content.push_str(&node.as_text().map(|s| s.trim()).unwrap_or_default());
+                        self.content.push_str(&node.text().next().map(|s| s.trim()).unwrap_or_default());
                         // self.content.push_str("\n\n");
                     }
                     "strong" => {
@@ -157,6 +157,14 @@ impl BilibiliArticle {
                             }
                         }
                     }
+                    "a" => {
+                        let href = node.get_attribute("href");
+                        self.content.push_str("[");
+                        for child in node.children() {
+                            self.read_content_node(child)?;
+                        }
+                        write!(self.content, "]({})", href)?;
+                    }
                     "br" => {
                         self.content.push_str("\n");
                     }
@@ -170,12 +178,40 @@ impl BilibiliArticle {
                         }
                     }
                     "code" => {
-                        self.content.push_str("```");
+                        self.content.push_str(" `");
                         for child in node.children() {
                             self.read_content_node(child)?;
                         }
-                        self.content.push_str("```");
+                        self.content.push_str("` ");
                     }
+                    "ol" => {
+                        for (i, child) in node.children().enumerate() {
+                            write!(self.content, "{}. ", i + 1)?;
+                            for child in child.children() {
+                                self.read_content_node(child)?;
+                            }
+                            self.content.push_str("\n");
+                        }
+                    }
+                    "ul" => {
+                        for child in node.children() {
+                            self.content.push_str("- ");
+                            for child in child.children() {
+                                self.read_content_node(child)?;
+                            }
+                            self.content.push_str("\n");
+                        }
+                    }
+                    "blockquote" => {
+                        for child in node.children() {
+                            self.content.push_str("> ");
+                            for child in child.children() {
+                                self.read_content_node(child)?;
+                            }
+                            self.content.push_str("\n");
+                        }
+                    }
+
                     unknown => panic!("unknown element: {unknown}"),
                 }
             }
