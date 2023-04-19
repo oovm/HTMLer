@@ -2,9 +2,9 @@ use crate::{MarkResult, ZhihuArticle};
 use reqwest::IntoUrl;
 use std::str::FromStr;
 
-pub struct ZhihuAuto {}
+pub struct AutoMarkdown {}
 
-impl ZhihuAuto {
+impl AutoMarkdown {
     pub async fn new<S>(s: S) -> MarkResult<String>
     where
         S: IntoUrl,
