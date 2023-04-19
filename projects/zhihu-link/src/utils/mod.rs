@@ -1,4 +1,4 @@
-use crate::ZhihuResult;
+use crate::MarkResult;
 use htmler::{Html, Selector};
 use std::{io::Write, path::Path};
 
@@ -11,7 +11,7 @@ pub fn select_text(html: &Html, selector: &Selector) -> Option<String> {
     Some(text.to_string())
 }
 
-pub fn save_string<P>(path: P, s: &str) -> ZhihuResult<()>
+pub fn save_string<P>(path: P, s: &str) -> MarkResult<()>
 where
     P: AsRef<Path>,
 {

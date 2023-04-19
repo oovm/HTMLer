@@ -1,11 +1,10 @@
 use crate::{
     utils::{save_string, select_text},
-    ZhihuError, ZhihuResult,
+    MarkResult, ZhihuError,
 };
 use htmler::{Html, Node, NodeKind, Selector};
 use std::{
     fmt::{Display, Formatter, Write},
-    io::Write as _,
     path::Path,
     str::FromStr,
     sync::LazyLock,
@@ -52,34 +51,34 @@ impl BilibiliArticle {
     /// # use zhihu_link::ZhihuAnswer;
     /// let answer = ZhihuAnswer::new(58151047, 1).await?;
     /// ```
-    pub async fn new(article: usize) -> ZhihuResult<Self> {
+    pub async fn new(article: usize) -> MarkResult<Self> {
         let html = Self::request(article).await?;
         Ok(html.parse()?)
     }
-    pub async fn request(article: usize) -> ZhihuResult<String> {
+    pub async fn request(article: usize) -> MarkResult<String> {
         let url = format!("https://www.bilibili.com/read/cv{article}");
         let resp = reqwest::Client::new().get(url).send().await?;
         Ok(resp.text().await?)
     }
-    pub fn save<P>(&self, path: P) -> ZhihuResult<()>
+    pub fn save<P>(&self, path: P) -> MarkResult<()>
     where
         P: AsRef<Path>,
     {
         save_string(path, &self.to_string())
     }
-    fn do_parse(&mut self, html: &str) -> ZhihuResult<()> {
+    fn do_parse(&mut self, html: &str) -> MarkResult<()> {
         let html = Html::parse_document(html);
         self.extract_title(&html)?;
         self.extract_description(&html)?;
         self.extract_content(&html)?;
         Ok(())
     }
-    fn extract_title(&mut self, html: &Html) -> ZhihuResult<()> {
+    fn extract_title(&mut self, html: &Html) -> MarkResult<()> {
         let title = select_text(&html, &SELECT_TITLE).unwrap_or_default();
         self.title = title.replace("\r", "").replace("\n", "");
         Ok(())
     }
-    fn extract_description(&mut self, html: &Html) -> ZhihuResult<()> {
+    fn extract_description(&mut self, html: &Html) -> MarkResult<()> {
         let selector = Selector::new("div.QuestionRichText");
         let _: Option<_> = try {
             for node in html.select(&selector) {
@@ -89,10 +88,100 @@ impl BilibiliArticle {
         };
         Ok(())
     }
-    fn extract_content(&mut self, html: &Html) -> ZhihuResult<()> {
-        // div.RichContent-inner
-        for node in html.select(&SELECT_CONTENT) {
-            self.content.push_str(&node.as_html()?);
+    fn extract_content(&mut self, html: &Html) -> MarkResult<()> {
+        match html.select_one(&SELECT_CONTENT) {
+            Some(s) => {
+                for child in s.children() {
+                    self.read_content_node(child)?;
+                }
+            }
+            None => {
+                tracing::warn!("content not found");
+            }
+        };
+        Ok(())
+    }
+    fn read_content_node(&mut self, node: Node) -> MarkResult<()> {
+        match node.as_kind() {
+            NodeKind::Document => {
+                println!("document")
+            }
+            NodeKind::Fragment => {
+                println!("fragment")
+            }
+            NodeKind::Doctype(_) => {
+                println!("doctype")
+            }
+            NodeKind::Comment(_) => {
+                println!("comment")
+            }
+            NodeKind::Text(t) => {
+                self.content.push_str(t.trim());
+            }
+            NodeKind::Element(e) => {
+                match e.name() {
+                    "h1" => {
+                        self.content.push_str("# ");
+                        self.content.push_str(&node.as_text().map(|s| s.trim()).unwrap_or_default());
+                        // self.content.push_str("\n\n");
+                    }
+                    "strong" => {
+                        self.content.push_str("**");
+                        for child in node.children() {
+                            self.read_content_node(child)?;
+                        }
+                        self.content.push_str("**");
+                    }
+                    "p" => {
+                        for child in node.children() {
+                            self.read_content_node(child)?;
+                        }
+                        self.content.push_str("\n\n");
+                    }
+                    "span" => {
+                        // math mode
+                        if e.has_class("ztext-math") {
+                            match e.get_attribute("data-tex") {
+                                Some(s) => {
+                                    self.content.push_str(" $$");
+                                    self.content.push_str(s);
+                                    self.content.push_str("$$ ");
+                                }
+                                None => {}
+                            }
+                        }
+                        // normal mode
+                        else {
+                            for child in node.children() {
+                                self.read_content_node(child)?;
+                            }
+                        }
+                    }
+                    "br" => {
+                        self.content.push_str("\n");
+                    }
+                    "figure" => {
+                        for child in node.descendants().filter(|e| e.has_class("img")) {
+                            let original = child.get_attribute("data-original");
+                            if !original.is_empty() {
+                                write!(self.content, "![]({})", original)?;
+                                break;
+                            }
+                        }
+                    }
+                    "code" => {
+                        self.content.push_str("```");
+                        for child in node.children() {
+                            self.read_content_node(child)?;
+                        }
+                        self.content.push_str("```");
+                    }
+                    unknown => panic!("unknown element: {unknown}"),
+                }
+            }
+            NodeKind::ProcessingInstruction(_) => {
+                println!("processing instruction");
+            }
         }
         Ok(())
     }

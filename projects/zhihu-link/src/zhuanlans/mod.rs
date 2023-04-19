@@ -1,7 +1,7 @@
-use crate::{utils::select_text, ZhihuError, ZhihuResult};
-use htmler::{Html, Node, NodeKind, Selector};
+use crate::{utils::select_text, MarkResult, ZhihuError};
+use htmler::{Html, Selector};
 use std::{
-    fmt::{Display, Formatter, Write},
+    fmt::{Display, Formatter},
     io::Write as _,
     path::Path,
     str::FromStr,
@@ -49,16 +49,16 @@ impl ZhihuArticle {
     /// # use zhihu_link::ZhihuAnswer;
     /// let answer = ZhihuAnswer::new(58151047, 1).await?;
     /// ```
-    pub async fn new(article: usize) -> ZhihuResult<Self> {
+    pub async fn new(article: usize) -> MarkResult<Self> {
         let html = Self::request(article).await?;
         Ok(html.parse()?)
     }
-    pub async fn request(article: usize) -> ZhihuResult<String> {
+    pub async fn request(article: usize) -> MarkResult<String> {
         let url = format!("https://zhuanlan.zhihu.com/p/{article}");
         let resp = reqwest::Client::new().get(url).send().await?;
         Ok(resp.text().await?)
     }
-    pub fn save<P>(&self, path: P) -> ZhihuResult<()>
+    pub fn save<P>(&self, path: P) -> MarkResult<()>
     where
         P: AsRef<Path>,
     {
@@ -66,7 +66,7 @@ impl ZhihuArticle {
         file.write_all(self.to_string().as_bytes())?;
         Ok(())
     }
-    fn do_parse(&mut self, html: &str) -> ZhihuResult<()> {
+    fn do_parse(&mut self, html: &str) -> MarkResult<()> {
         let html = Html::parse_document(html);
         self.extract_title(&html)?;
         self.extract_description(&html)?;
@@ -74,11 +74,11 @@ impl ZhihuArticle {
         Ok(())
     }
 
-    fn extract_title(&mut self, html: &Html) -> ZhihuResult<()> {
+    fn extract_title(&mut self, html: &Html) -> MarkResult<()> {
         self.title = select_text(&html, &SELECT_TITLE).unwrap_or_default();
         Ok(())
     }
-    fn extract_description(&mut self, html: &Html) -> ZhihuResult<()> {
+    fn extract_description(&mut self, html: &Html) -> MarkResult<()> {
         let selector = Selector::new("div.QuestionRichText");
         let _: Option<_> = try {
             for node in html.select(&selector) {
@@ -88,7 +88,7 @@ impl ZhihuArticle {
         };
         Ok(())
     }
-    fn extract_content(&mut self, html: &Html) -> ZhihuResult<()> {
+    fn extract_content(&mut self, html: &Html) -> MarkResult<()> {
         // div.RichContent-inner
         let json = select_text(&html, &SELECT_CONTENT).unwrap_or_default();
         let decode = serde_json::from_str::<serde_json::Value>(&json)?;

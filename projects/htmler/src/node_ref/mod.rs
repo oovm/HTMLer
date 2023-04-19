@@ -44,25 +44,15 @@ impl<'a> Node<'a> {
         Select { scope: *self, inner, selector }
     }
 
-    fn serialize(&self, traversal_scope: TraversalScope) -> String {
+    fn serialize(&self, traversal_scope: TraversalScope) -> std::io::Result<String> {
         let opts = SerializeOpts {
             scripting_enabled: true, // It's not clear what this does.
             traversal_scope,
             create_missing_parent: false,
         };
         let mut buf = Vec::new();
-        serialize(&mut buf, self, opts).unwrap();
-        String::from_utf8(buf).unwrap()
-    }
-
-    /// Returns the HTML of this element.
-    pub fn html(&self) -> String {
-        self.serialize(TraversalScope::IncludeNode)
-    }
-
-    /// Returns the inner HTML of this element.
-    pub fn inner_html(&self) -> String {
-        self.serialize(TraversalScope::ChildrenOnly(None))
+        serialize(&mut buf, self, opts)?;
+        unsafe { Ok(String::from_utf8_unchecked(buf)) }
     }
 
     /// Returns an iterator over descendent text nodes.
@@ -95,11 +85,14 @@ impl<'a> Node<'a> {
     }
     /// Returns the parent element.
     pub fn has_attribute(&self, name: &str) -> bool {
-        self.as_data().unwrap().has_attribute(name)
+        match self.as_data() {
+            Some(data) => data.has_attribute(name),
+            None => false,
+        }
     }
     /// Returns the value of an attribute.
     pub fn get_attribute(&self, name: &str) -> &'a str {
-        self.as_data().unwrap().get_attribute(name).unwrap_or("")
+        self.as_data().and_then(|data| data.get_attribute(name)).unwrap_or("")
     }
 }
 
@@ -149,16 +142,13 @@ impl<'a> Node<'a> {
             _ => None,
         }
     }
-    /// Returns the parent element.
-    pub fn as_html(&self) -> std::io::Result<String> {
-        let opts = SerializeOpts {
-            scripting_enabled: true, // It's not clear what this does.
-            traversal_scope: TraversalScope::IncludeNode,
-            create_missing_parent: false,
-        };
-        let mut buf = Vec::new();
-        serialize(&mut buf, self, opts)?;
-        unsafe { Ok(String::from_utf8_unchecked(buf)) }
+    /// Returns the HTML of this element.
+    pub fn as_html(&self) -> String {
+        self.serialize(TraversalScope::IncludeNode).unwrap()
+    }
+    /// Returns the inner HTML of this element.
+    pub fn inner_html(&self) -> String {
+        self.serialize(TraversalScope::ChildrenOnly(None)).unwrap()
     }
     /// Returns self as an element.
     pub fn as_processing_instruction(&self) -> Option<&ProcessingInstruction> {
