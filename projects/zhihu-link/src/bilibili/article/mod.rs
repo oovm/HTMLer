@@ -169,10 +169,10 @@ impl BilibiliArticle {
                         self.content.push_str("\n");
                     }
                     "figure" => {
-                        for child in node.descendants().filter(|e| e.has_class("img")) {
-                            let original = child.get_attribute("data-original");
+                        for child in node.descendants().filter(|e| e.is_a("img")) {
+                            let original = child.get_attribute("data-src");
                             if !original.is_empty() {
-                                write!(self.content, "![]({})", original)?;
+                                write!(self.content, "![](https:{})\n\n", original)?;
                                 break;
                             }
                         }
