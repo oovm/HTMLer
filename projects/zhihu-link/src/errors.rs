@@ -6,7 +6,7 @@ pub enum ZhihuError {
     UnknownError,
 }
 
-pub type ZhihuResult<T> = Result<T, ZhihuError>;
+pub type MarkResult<T> = Result<T, ZhihuError>;
 
 impl From<reqwest::Error> for ZhihuError {
     fn from(e: reqwest::Error) -> Self {

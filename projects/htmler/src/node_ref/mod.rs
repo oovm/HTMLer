@@ -88,7 +88,10 @@ impl<'a> Node<'a> {
     }
     /// Returns the parent element.
     pub fn has_class(&self, class: &str) -> bool {
-        self.as_data().unwrap().has_class(class)
+        match self.as_data() {
+            Some(data) => data.has_class(class),
+            None => false,
+        }
     }
     /// Returns the parent element.
     pub fn has_attribute(&self, name: &str) -> bool {
@@ -146,6 +149,7 @@ impl<'a> Node<'a> {
             _ => None,
         }
     }
+    /// Returns the parent element.
     pub fn as_html(&self) -> std::io::Result<String> {
         let opts = SerializeOpts {
             scripting_enabled: true, // It's not clear what this does.

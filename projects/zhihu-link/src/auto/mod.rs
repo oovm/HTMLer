@@ -1,11 +1,11 @@
-use crate::{ZhihuArticle, ZhihuResult};
+use crate::{MarkResult, ZhihuArticle};
 use reqwest::IntoUrl;
 use std::str::FromStr;
 
 pub struct ZhihuAuto {}
 
 impl ZhihuAuto {
-    pub async fn new<S>(s: S) -> ZhihuResult<String>
+    pub async fn new<S>(s: S) -> MarkResult<String>
     where
         S: IntoUrl,
     {

@@ -1,4 +1,4 @@
-use std::{io::Write, path::Path, str::FromStr};
+use std::{io::Write, str::FromStr};
 use zhihu_link::{utils::save_string, BilibiliArticle, ZhihuAnswer, ZhihuArticle, ZhihuAuto};
 
 #[test]

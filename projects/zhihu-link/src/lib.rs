@@ -9,4 +9,4 @@ pub mod utils;
 mod zhuanlans;
 
 pub use crate::{answers::ZhihuAnswer, auto::ZhihuAuto, bilibili::article::BilibiliArticle, zhuanlans::ZhihuArticle};
-pub use errors::{ZhihuError, ZhihuResult};
+pub use errors::{MarkResult, ZhihuError};

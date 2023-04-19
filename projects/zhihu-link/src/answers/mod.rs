@@ -1,4 +1,4 @@
-use crate::{ZhihuError, ZhihuResult};
+use crate::{MarkResult, ZhihuError};
 use htmler::{Html, Node, NodeKind, Selector};
 use std::{
     fmt::{Display, Formatter, Write},
@@ -44,16 +44,16 @@ impl ZhihuAnswer {
     /// # use zhihu_link::ZhihuAnswer;
     /// let answer = ZhihuAnswer::new(58151047, 1).await?;
     /// ```
-    pub async fn new(question: usize, answer: usize) -> ZhihuResult<Self> {
+    pub async fn new(question: usize, answer: usize) -> MarkResult<Self> {
         let html = Self::request(question, answer).await?;
         Ok(html.parse()?)
     }
-    pub async fn request(question: usize, answer: usize) -> ZhihuResult<String> {
+    pub async fn request(question: usize, answer: usize) -> MarkResult<String> {
         let url = format!("https://www.zhihu.com/question/{question}/answer/{answer}");
         let resp = reqwest::Client::new().get(url).send().await?;
         Ok(resp.text().await?)
     }
-    pub fn save<P>(&self, path: P) -> ZhihuResult<()>
+    pub fn save<P>(&self, path: P) -> MarkResult<()>
     where
         P: AsRef<Path>,
     {
@@ -61,14 +61,14 @@ impl ZhihuAnswer {
         file.write_all(self.to_string().as_bytes())?;
         Ok(())
     }
-    fn do_parse(&mut self, html: &str) -> ZhihuResult<()> {
+    fn do_parse(&mut self, html: &str) -> MarkResult<()> {
         let html = Html::parse_document(html);
         self.extract_title(&html)?;
         self.extract_description(&html)?;
         self.extract_content(&html)?;
         Ok(())
     }
-    fn extract_title(&mut self, html: &Html) -> ZhihuResult<()> {
+    fn extract_title(&mut self, html: &Html) -> MarkResult<()> {
         let selector = Selector::new("h1.QuestionHeader-title");
         let _: Option<_> = try {
             let node = html.select(&selector).next()?;
@@ -77,7 +77,7 @@ impl ZhihuAnswer {
         };
         Ok(())
     }
-    fn extract_description(&mut self, html: &Html) -> ZhihuResult<()> {
+    fn extract_description(&mut self, html: &Html) -> MarkResult<()> {
         let selector = Selector::new("div.QuestionRichText");
         let _: Option<_> = try {
             for node in html.select(&selector) {
@@ -87,7 +87,7 @@ impl ZhihuAnswer {
         };
         Ok(())
     }
-    fn extract_content(&mut self, html: &Html) -> ZhihuResult<()> {
+    fn extract_content(&mut self, html: &Html) -> MarkResult<()> {
         // div.RichContent-inner
         let selector = Selector::new("span.CopyrightRichText-richText");
         let _: Option<_> = try {
@@ -98,7 +98,7 @@ impl ZhihuAnswer {
         };
         Ok(())
     }
-    fn read_content_node(&mut self, node: Node) -> ZhihuResult<()> {
+    fn read_content_node(&mut self, node: Node) -> MarkResult<()> {
         match node.as_kind() {
             NodeKind::Document => {
                 println!("document")
