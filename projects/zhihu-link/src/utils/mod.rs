@@ -1,4 +1,6 @@
+use crate::ZhihuResult;
 use htmler::{Html, Selector};
+use std::{io::Write, path::Path};
 
 /// 选择首个符合选择器的节点的文本内容, 该节点需要是**纯文本节点**
 ///
@@ -7,4 +9,13 @@ pub fn select_text(html: &Html, selector: &Selector) -> Option<String> {
     let node = html.select_one(selector)?;
     let text = node.first_child()?.as_text()?;
     Some(text.to_string())
+}
+
+pub fn save_string<P>(path: P, s: &str) -> ZhihuResult<()>
+where
+    P: AsRef<Path>,
+{
+    let mut file = std::fs::File::create(path)?;
+    file.write_all(s.as_bytes())?;
+    Ok(())
 }

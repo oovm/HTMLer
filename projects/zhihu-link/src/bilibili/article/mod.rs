@@ -1,4 +1,7 @@
-use crate::{utils::select_text, ZhihuError, ZhihuResult};
+use crate::{
+    utils::{save_string, select_text},
+    ZhihuError, ZhihuResult,
+};
 use htmler::{Html, Node, NodeKind, Selector};
 use std::{
     fmt::{Display, Formatter, Write},
@@ -35,8 +38,8 @@ impl FromStr for BilibiliArticle {
         Ok(empty)
     }
 }
-static SELECT_TITLE: LazyLock<Selector> = LazyLock::new(|| Selector::new("h1.Post-Title"));
-static SELECT_CONTENT: LazyLock<Selector> = LazyLock::new(|| Selector::new("script#js-initialData"));
+static SELECT_TITLE: LazyLock<Selector> = LazyLock::new(|| Selector::new("p.inner-title"));
+static SELECT_CONTENT: LazyLock<Selector> = LazyLock::new(|| Selector::new("div.read-article-holder"));
 
 // script#js-initialData
 
@@ -62,9 +65,7 @@ impl BilibiliArticle {
     where
         P: AsRef<Path>,
     {
-        let mut file = std::fs::File::create(path)?;
-        file.write_all(self.to_string().as_bytes())?;
-        Ok(())
+        save_string(path, &self.to_string())
     }
     fn do_parse(&mut self, html: &str) -> ZhihuResult<()> {
         let html = Html::parse_document(html);
@@ -73,9 +74,9 @@ impl BilibiliArticle {
         self.extract_content(&html)?;
         Ok(())
     }
-
     fn extract_title(&mut self, html: &Html) -> ZhihuResult<()> {
-        self.title = select_text(&html, &SELECT_TITLE).unwrap_or_default();
+        let title = select_text(&html, &SELECT_TITLE).unwrap_or_default();
+        self.title = title.replace("\r", "").replace("\n", "");
         Ok(())
     }
     fn extract_description(&mut self, html: &Html) -> ZhihuResult<()> {
@@ -90,9 +91,9 @@ impl BilibiliArticle {
     }
     fn extract_content(&mut self, html: &Html) -> ZhihuResult<()> {
         // div.RichContent-inner
-        let json = select_text(&html, &SELECT_CONTENT).unwrap_or_default();
-        let decode = serde_json::from_str::<serde_json::Value>(&json)?;
-        self.content = format!("{:#?}", decode);
+        for node in html.select(&SELECT_CONTENT) {
+            self.content.push_str(&node.as_html()?);
+        }
         Ok(())
     }
 }

@@ -146,6 +146,16 @@ impl<'a> Node<'a> {
             _ => None,
         }
     }
+    pub fn as_html(&self) -> std::io::Result<String> {
+        let opts = SerializeOpts {
+            scripting_enabled: true, // It's not clear what this does.
+            traversal_scope: TraversalScope::IncludeNode,
+            create_missing_parent: false,
+        };
+        let mut buf = Vec::new();
+        serialize(&mut buf, self, opts)?;
+        unsafe { Ok(String::from_utf8_unchecked(buf)) }
+    }
     /// Returns self as an element.
     pub fn as_processing_instruction(&self) -> Option<&ProcessingInstruction> {
         match self.as_kind() {

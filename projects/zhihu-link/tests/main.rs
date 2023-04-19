@@ -1,5 +1,5 @@
 use std::{io::Write, path::Path, str::FromStr};
-use zhihu_link::{BilibiliArticle, ZhihuAnswer, ZhihuArticle, ZhihuAuto};
+use zhihu_link::{utils::save_string, BilibiliArticle, ZhihuAnswer, ZhihuArticle, ZhihuAuto};
 
 #[test]
 fn ready() {
@@ -8,17 +8,8 @@ fn ready() {
 
 #[tokio::test]
 async fn test_reqwest() {
-    let answer = ZhihuArticle::from_str(include_str!("../test_article.html")).unwrap();
+    let answer = BilibiliArticle::from_str(include_str!("../test_bilibili.html")).unwrap();
     answer.save("test.md").unwrap();
-}
-
-fn save_string<P>(path: P, s: &str) -> std::io::Result<()>
-where
-    P: AsRef<Path>,
-{
-    let mut file = std::fs::File::create(path)?;
-    file.write_all(s.as_bytes())?;
-    Ok(())
 }
 
 #[tokio::test]
