@@ -1,10 +1,11 @@
-use crate::{ZhihuError, ZhihuResult};
+use crate::{utils::select_text, ZhihuError, ZhihuResult};
 use htmler::{Html, Node, NodeKind, Selector};
 use std::{
     fmt::{Display, Formatter, Write},
     io::Write as _,
     path::Path,
     str::FromStr,
+    sync::LazyLock,
 };
 
 #[derive(Debug)]
@@ -34,6 +35,8 @@ impl FromStr for ZhihuArticle {
         Ok(empty)
     }
 }
+static SELECT_TITLE: LazyLock<Selector> = LazyLock::new(|| Selector::new("h1.Post-Title"));
+static SELECT_CONTENT: LazyLock<Selector> = LazyLock::new(|| Selector::new("div.Post-RichTextContainer"));
 
 impl ZhihuArticle {
     /// 通过问题 ID 和回答 ID 获取知乎回答, 并渲染为 markdown
@@ -68,13 +71,9 @@ impl ZhihuArticle {
         self.extract_content(&html)?;
         Ok(())
     }
+
     fn extract_title(&mut self, html: &Html) -> ZhihuResult<()> {
-        let selector = Selector::new("h1.QuestionHeader-title");
-        let _: Option<_> = try {
-            let node = html.select(&selector).next()?;
-            let text = node.first_child()?.as_text()?;
-            self.title = text.to_string();
-        };
+        self.title = select_text(&html, &SELECT_TITLE).unwrap_or_default();
         Ok(())
     }
     fn extract_description(&mut self, html: &Html) -> ZhihuResult<()> {

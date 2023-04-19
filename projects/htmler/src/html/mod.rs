@@ -76,6 +76,11 @@ impl Html {
         HtmlSelect { inner: self.tree.nodes(), selector }
     }
 
+    /// Returns the first element matching a selector.
+    pub fn select_one(&self, selector: &Selector) -> Option<Node> {
+        self.select(selector).next()
+    }
+
     /// Returns the root `<html>` element.
     pub fn root_node(&self) -> Node {
         let root_node = self.tree.root().children().find(|child| child.value().is_element()).expect("html node missing");

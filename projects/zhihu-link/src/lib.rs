@@ -1,4 +1,5 @@
 #![feature(try_blocks)]
+#![feature(once_cell)]
 
 mod answers;
 mod auto;
