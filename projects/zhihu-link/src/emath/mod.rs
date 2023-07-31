@@ -128,12 +128,12 @@ impl EMathDissussion {
                             println!("{:?}", node.text().collect::<String>())
                         }
                     }
-                    "p" => {
-                        for child in node.children() {
-                            self.read_content_node(child)?;
-                        }
-                        self.content.push_str("\n\n");
-                    }
+                    // "p" => {
+                    //     for child in node.children() {
+                    //         self.read_content_node(child)?;
+                    //     }
+                    //     self.content.push_str("\n\n");
+                    // }
                     // "span" => {
                     //     // math mode
                     //     if e.has_class("ztext-math") {
@@ -154,7 +154,7 @@ impl EMathDissussion {
                     //     }
                     // }
                     "br" => {
-                        self.content.push_str("\n");
+                        self.content.push_str("\n\n");
                     }
                     "i" => {
                         if e.has_class("pstatus") {
@@ -171,6 +171,15 @@ impl EMathDissussion {
                         }
                         _ => {}
                     },
+                    "ignore_js_op" => {
+                        for child in node.children() {
+                            self.read_content_node(child)?;
+                        }
+                    }
+                    "img" => {
+                        let file = e.get_attribute("file").unwrap_or_default();
+                        writeln!(self.content, "![](https://bbs.emath.ac.cn/{})", file)?;
+                    }
                     _ => {
                         println!("{:?}", e);
                         println!("{:?}", node.text().collect::<String>())
@@ -195,10 +204,10 @@ impl EMathDissussion {
     }
     fn extract_code_block(&mut self, node: Node) -> MarkResult<()> {
         let selector = Selector::new("li");
-        write!(self.content, "```rust\n")?;
+        write!(self.content, "```\n")?;
         for child in node.select(&selector) {
             match child.first_child().and_then(|s| s.as_text()) {
-                Some(s) => write!(self.content, "{}\n", s.trim())?,
+                Some(s) => write!(self.content, "{}\n", s)?,
                 None => {}
             }
         }
