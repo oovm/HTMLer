@@ -13,3 +13,4 @@ time-travel.*
 target/
 Cargo.lock
 *.html
+test.md
