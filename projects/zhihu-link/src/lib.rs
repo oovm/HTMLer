@@ -1,5 +1,5 @@
 #![feature(try_blocks)]
-#![feature(once_cell)]
+#![feature(lazy_cell)]
 
 mod answers;
 mod auto;
