@@ -1,4 +1,4 @@
-use crate::{MarkResult, ZhihuError};
+use crate::{utils::select_text, MarkResult, ZhihuError};
 use htmler::{Html, Node, NodeKind, Selector};
 use std::{
     fmt::{Display, Formatter, Write},
@@ -69,12 +69,8 @@ impl EMathDissussion {
         Ok(())
     }
     fn extract_title(&mut self, html: &Html) -> MarkResult<()> {
-        let selector = Selector::new("h1.QuestionHeader-title");
-        let _: Option<_> = try {
-            let node = html.select(&selector).next()?;
-            let text = node.first_child()?.as_text()?;
-            self.title = text.to_string();
-        };
+        let selector = Selector::new("span#thread_subject");
+        self.title = select_text(html, &selector).unwrap_or_default();
         Ok(())
     }
     fn extract_description(&mut self, html: &Html) -> MarkResult<()> {
@@ -89,13 +85,13 @@ impl EMathDissussion {
     }
     fn extract_content(&mut self, html: &Html) -> MarkResult<()> {
         // div.RichContent-inner
-        let selector = Selector::new("span.CopyrightRichText-richText");
-        let _: Option<_> = try {
-            let node = html.select(&selector).next()?;
-            for child in node.children() {
-                self.read_content_node(child).ok()?;
+        let selector = Selector::new("td.t_f");
+        for post in html.select(&selector) {
+            for child in post.children() {
+                self.read_content_node(child)?;
             }
-        };
+            write!(self.content, "\n\n---\n")?;
+        }
         Ok(())
     }
     fn read_content_node(&mut self, node: Node) -> MarkResult<()> {
@@ -117,48 +113,96 @@ impl EMathDissussion {
             }
             NodeKind::Element(e) => {
                 match e.name() {
+                    "div" => {
+                        if e.has_class("attach_tips") {
+                            // do nothing
+                        }
+                        else if e.has_class("quote") {
+                            // do nothing
+                        }
+                        else if e.has_class("blockcode") {
+                            self.extract_code(node)?
+                        }
+                        else {
+                            println!("{:?}", e);
+                            println!("{:?}", node.text().collect::<String>())
+                        }
+                    }
                     "p" => {
                         for child in node.children() {
                             self.read_content_node(child)?;
                         }
                         self.content.push_str("\n\n");
                     }
-                    "span" => {
-                        // math mode
-                        if e.has_class("ztext-math") {
-                            match e.get_attribute("data-tex") {
-                                Some(s) => {
-                                    self.content.push_str(" $$");
-                                    self.content.push_str(s);
-                                    self.content.push_str("$$ ");
-                                }
-                                None => {}
-                            }
-                        }
-                        // normal mode
-                        else {
-                            for child in node.children() {
-                                self.read_content_node(child)?;
-                            }
-                        }
-                    }
+                    // "span" => {
+                    //     // math mode
+                    //     if e.has_class("ztext-math") {
+                    //         match e.get_attribute("data-tex") {
+                    //             Some(s) => {
+                    //                 self.content.push_str(" $$");
+                    //                 self.content.push_str(s);
+                    //                 self.content.push_str("$$ ");
+                    //             }
+                    //             None => {}
+                    //         }
+                    //     }
+                    //     // normal mode
+                    //     else {
+                    //         for child in node.children() {
+                    //             self.read_content_node(child)?;
+                    //         }
+                    //     }
+                    // }
                     "br" => {
                         self.content.push_str("\n");
                     }
-                    "figure" => {
-                        for child in node.descendants().filter(|e| e.has_class("img")) {
-                            let original = child.get_attribute("data-original");
-                            if !original.is_empty() {
-                                write!(self.content, "![]({})", original)?;
-                                break;
-                            }
+                    "i" => {
+                        if e.has_class("pstatus") {
+                            // do nothing
+                        }
+                        else {
+                            println!("{:?}", e);
+                            println!("{:?}", node.text().collect::<String>())
                         }
                     }
+                    "a" => match e.get_attribute("href") {
+                        Some(s) => {
+                            write!(self.content, "[{}]({})", node.text().collect::<String>(), s)?;
+                        }
+                        _ => {}
+                    },
+                    _ => {
+                        println!("{:?}", e);
+                        println!("{:?}", node.text().collect::<String>())
+                    }
+                    // "figure" => {
+                    //     for child in node.descendants().filter(|e| e.has_class("img")) {
+                    //         let original = child.get_attribute("data-original");
+                    //         if !original.is_empty() {
+                    //             write!(self.content, "![]({})", original)?;
+                    //             break;
+                    //         }
+                    //     }
+                    // }
                     unknown => panic!("unknown element: {unknown}"),
                 }
             }
             NodeKind::ProcessingInstruction(_) => {
                 println!("processing instruction");
+            }
+        }
+        Ok(())
+    }
+    fn extract_code(&mut self, node: Node) -> MarkResult<()> {
+        for child in node.children() {
+            match node.as_element() {
+                Some(s) => match s.name() {
+                    _ => {
+                        println!("code: {:?}", s);
+                        println!("code: {:?}", node.text().collect::<String>())
+                    }
+                },
+                _ => {}
             }
         }
         Ok(())

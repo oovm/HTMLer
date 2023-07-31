@@ -21,7 +21,7 @@ async fn export_bilibili() {
 async fn export_emath() {
     let input = std::fs::read_to_string("test_emath.html").unwrap();
     let answer = EMathDissussion::from_str(&input).unwrap();
-    answer.save("tests/emath/thread18819.md").unwrap();
+    answer.save("tests/emath/thread15592.md").unwrap();
 }
 
 #[ignore]
@@ -33,7 +33,7 @@ async fn pre_fetch() {
     save_string("test_article.html", &request).unwrap();
     let article = BilibiliArticle::request(4079473).await.unwrap();
     save_string("test_bilibili.html", &article).unwrap();
-    let article = EMathDissussion::request(18819, 1).await.unwrap();
+    let article = EMathDissussion::request(15592, 1).await.unwrap();
     save_string("test_emath.html", &article).unwrap();
 }
 

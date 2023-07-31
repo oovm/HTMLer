@@ -41,25 +41,25 @@ impl<'a> selectors::Element for Node<'a> {
 
     fn is_html_element_in_html_document(&self) -> bool {
         // FIXME: Is there more to this?
-        self.as_data().unwrap().name.ns == ns!(html)
+        self.as_element().unwrap().name.ns == ns!(html)
     }
 
     fn has_local_name(&self, name: &CssLocalName) -> bool {
-        match self.as_data() {
+        match self.as_element() {
             Some(data) => data.name.local == name.0,
             None => false,
         }
     }
 
     fn has_namespace(&self, namespace: &Namespace) -> bool {
-        match self.as_data() {
+        match self.as_element() {
             Some(data) => &data.name.ns == namespace,
             None => false,
         }
     }
 
     fn is_same_type(&self, other: &Self) -> bool {
-        self.as_data().unwrap().name == other.as_data().unwrap().name
+        self.as_element().unwrap().name == other.as_element().unwrap().name
     }
 
     fn attr_matches(
@@ -68,7 +68,7 @@ impl<'a> selectors::Element for Node<'a> {
         local_name: &CssLocalName,
         operation: &AttrSelectorOperation<&CssString>,
     ) -> bool {
-        self.as_data().unwrap().attrs.iter().any(|(key, value)| {
+        self.as_element().unwrap().attrs.iter().any(|(key, value)| {
             !matches!(*ns, NamespaceConstraint::Specific(url) if *url != key.ns)
                 && local_name.0 == key.local
                 && operation.eval_str(value)
@@ -97,14 +97,14 @@ impl<'a> selectors::Element for Node<'a> {
     }
 
     fn has_id(&self, id: &CssLocalName, case_sensitivity: CaseSensitivity) -> bool {
-        match self.as_data().unwrap().id() {
+        match self.as_element().unwrap().id() {
             Some(val) => case_sensitivity.eq(id.0.as_bytes(), val.as_bytes()),
             None => false,
         }
     }
 
     fn has_class(&self, name: &CssLocalName, case_sensitivity: CaseSensitivity) -> bool {
-        self.as_data().unwrap().classes().any(|c| case_sensitivity.eq(c.as_bytes(), name.0.as_bytes()))
+        self.as_element().unwrap().classes().any(|c| case_sensitivity.eq(c.as_bytes(), name.0.as_bytes()))
     }
 
     fn imported_part(&self, _: &CssLocalName) -> Option<CssLocalName> {

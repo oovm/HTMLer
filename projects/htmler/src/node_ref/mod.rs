@@ -78,21 +78,21 @@ impl<'a> Node<'a> {
     }
     /// Returns the parent element.
     pub fn has_class(&self, class: &str) -> bool {
-        match self.as_data() {
+        match self.as_element() {
             Some(data) => data.has_class(class),
             None => false,
         }
     }
     /// Returns the parent element.
     pub fn has_attribute(&self, name: &str) -> bool {
-        match self.as_data() {
+        match self.as_element() {
             Some(data) => data.has_attribute(name),
             None => false,
         }
     }
     /// Returns the value of an attribute.
     pub fn get_attribute(&self, name: &str) -> &'a str {
-        self.as_data().and_then(|data| data.get_attribute(name)).unwrap_or("")
+        self.as_element().and_then(|data| data.get_attribute(name)).unwrap_or("")
     }
 }
 
@@ -112,7 +112,7 @@ impl<'a> Node<'a> {
     where
         S: AsRef<str>,
     {
-        match self.as_data() {
+        match self.as_element() {
             Some(data) => data.is_a(element.as_ref()),
             None => false,
         }
@@ -122,7 +122,7 @@ impl<'a> Node<'a> {
         self.ptr.value()
     }
     /// Returns the parent element.
-    pub fn as_data(&self) -> Option<&'a NodeData> {
+    pub fn as_element(&self) -> Option<&'a NodeData> {
         match self.as_kind() {
             NodeKind::Element(ref e) => Some(e),
             _ => None,
