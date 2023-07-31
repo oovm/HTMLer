@@ -166,8 +166,9 @@ impl EMathDissussion {
                         }
                     }
                     "a" => match e.get_attribute("href") {
-                        Some(s) => {
-                            write!(self.content, "[{}]({})", node.text().collect::<String>(), s)?;
+                        Some(link) => {
+                            let inner = node.text().collect::<String>();
+                            write!(self.content, "[{}]({})", inner, link)?;
                         }
                         _ => {}
                     },

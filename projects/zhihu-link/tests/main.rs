@@ -19,7 +19,10 @@ async fn export_bilibili() {
 #[ignore]
 #[tokio::test]
 async fn export_emath() {
-    let input = std::fs::read_to_string("test_emath.html").unwrap();
+    let input = std::fs::read_to_string("test_emath_9161.html").unwrap();
+    let answer = EMathDissussion::from_str(&input).unwrap();
+    answer.save("tests/emath/thread9161.md").unwrap();
+    let input = std::fs::read_to_string("test_emath_18664.html").unwrap();
     let answer = EMathDissussion::from_str(&input).unwrap();
     answer.save("tests/emath/thread18664.md").unwrap();
 }
@@ -33,8 +36,10 @@ async fn pre_fetch() {
     save_string("test_article.html", &request).unwrap();
     let article = BilibiliArticle::request(4079473).await.unwrap();
     save_string("test_bilibili.html", &article).unwrap();
+    let article = EMathDissussion::request(9161, 1).await.unwrap();
+    save_string("test_emath_9161.html", &article).unwrap();
     let article = EMathDissussion::request(18664, 1).await.unwrap();
-    save_string("test_emath.html", &article).unwrap();
+    save_string("test_emath_18664.html", &article).unwrap();
 }
 
 #[tokio::test]
