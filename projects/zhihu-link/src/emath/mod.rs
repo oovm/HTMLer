@@ -121,7 +121,7 @@ impl EMathDissussion {
                             // do nothing
                         }
                         else if e.has_class("blockcode") {
-                            self.extract_code(node)?
+                            self.extract_code_block(node)?
                         }
                         else {
                             println!("{:?}", e);
@@ -193,18 +193,16 @@ impl EMathDissussion {
         }
         Ok(())
     }
-    fn extract_code(&mut self, node: Node) -> MarkResult<()> {
-        for child in node.children() {
-            match node.as_element() {
-                Some(s) => match s.name() {
-                    _ => {
-                        println!("code: {:?}", s);
-                        println!("code: {:?}", node.text().collect::<String>())
-                    }
-                },
-                _ => {}
+    fn extract_code_block(&mut self, node: Node) -> MarkResult<()> {
+        let selector = Selector::new("li");
+        write!(self.content, "```rust\n")?;
+        for child in node.select(&selector) {
+            match child.first_child().and_then(|s| s.as_text()) {
+                Some(s) => write!(self.content, "{}\n", s.trim())?,
+                None => {}
             }
         }
+        write!(self.content, "```")?;
         Ok(())
     }
 }
