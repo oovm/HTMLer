@@ -1,5 +1,7 @@
+use reqwest::Url;
 use std::{io::Write, str::FromStr};
-use zhihu_link::{utils::save_string, AutoMarkdown, BilibiliArticle, ZhihuAnswer, ZhihuArticle};
+use url::Host;
+use zhihu_link::{utils::save_string, AutoMarkdown, BilibiliArticle, EMathDissussion, ZhihuAnswer, ZhihuArticle};
 
 #[test]
 fn ready() {
@@ -16,6 +18,14 @@ async fn export_bilibili() {
 
 #[ignore]
 #[tokio::test]
+async fn export_emath() {
+    let input = std::fs::read_to_string("test_emath.html").unwrap();
+    let answer = EMathDissussion::from_str(&input).unwrap();
+    answer.save("tests/emath/thread18819.md").unwrap();
+}
+
+#[ignore]
+#[tokio::test]
 async fn pre_fetch() {
     let answer = ZhihuAnswer::request(347662352, 847873806).await.unwrap();
     save_string("test_answer.html", &answer).unwrap();
@@ -23,6 +33,8 @@ async fn pre_fetch() {
     save_string("test_article.html", &request).unwrap();
     let article = BilibiliArticle::request(4079473).await.unwrap();
     save_string("test_bilibili.html", &article).unwrap();
+    let article = EMathDissussion::request(18819, 1).await.unwrap();
+    save_string("test_emath.html", &article).unwrap();
 }
 
 #[tokio::test]
@@ -32,4 +44,19 @@ async fn test_url() {
     let mut file = std::fs::File::create("test.md").unwrap();
     file.write_all(answer.as_bytes()).unwrap();
     // answer.save("test.md").await.unwrap();
+}
+
+#[test]
+fn test() {
+    let url =
+        Url::parse("https://bbs.emath.ac.cn/forum.php?mod=viewthread&tid=5794&page=1#pid55470").expect("failed to parse url");
+    println!("{:#?}", url);
+    let host = match url.host() {
+        Some(Host::Domain(host)) => host,
+        _ => panic!("failed to get host"),
+    };
+    match host {
+        "bbs.emath.ac.cn" => println!("emath"),
+        _ => println!("others"),
+    }
 }

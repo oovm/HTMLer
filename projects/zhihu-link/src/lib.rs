@@ -1,13 +1,12 @@
 #![feature(try_blocks)]
 #![feature(lazy_cell)]
 
-mod answers;
-mod auto;
 mod bilibili;
 mod errors;
 pub mod utils;
-mod zhuanlans;
 mod dispatch;
+mod zhihu;
+mod emath;
 
-pub use crate::{answers::ZhihuAnswer, auto::AutoMarkdown, bilibili::article::BilibiliArticle, zhuanlans::ZhihuArticle, dispatch::UrlDispatcher};
+pub use crate::{zhihu::answers::ZhihuAnswer, zhihu::auto::AutoMarkdown, bilibili::article::BilibiliArticle, zhihu::zhuanlans::ZhihuArticle, dispatch::UrlDispatcher, emath::EMathDissussion};
 pub use errors::{MarkResult, ZhihuError};
