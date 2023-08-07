@@ -1,10 +1,6 @@
 use std::collections::BTreeMap;
 
-pub enum HtmlKind {
-    /// The document root.
-    Document,
-    /// The fragment root.
-    Fragment,
+pub enum HtmlNode {
     /// A doctype.
     Doctype(DocType),
     /// A comment.
@@ -17,18 +13,10 @@ pub enum HtmlKind {
     ProcessingInstruction(ProcessingInstruction),
 }
 
-pub struct HtmlNode {
-    kind: HtmlKind,
-    children: Vec<HtmlKind>,
-}
-
-/// An HTML element.
-#[derive(Clone, PartialEq, Eq)]
-pub struct HTMLElement {
-    tag: String,
-    id: String,
-    classes: Vec<String>,
-    attributes: BTreeMap<String, String>,
+impl Default for HtmlNode {
+    fn default() -> Self {
+        Self::Element(HTMLElement::default())
+    }
 }
 
 /// A doctype.
