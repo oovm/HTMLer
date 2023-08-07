@@ -1,0 +1,21 @@
+[package]
+name = "html-ast"
+version = "0.1.0"
+description = "HTML parsing and querying with CSS selectors"
+repository = "https://github.com/oovm/zhihu-markdown/blob/dev/projects/htmler"
+documentation = "https://docs.rs/html-ast"
+keywords = [
+    "html",
+    "css",
+]
+authors = [
+    "Aster <192607617@qq.com>",
+]
+license = "ISC"
+edition = "2021"
+readme = "readme.md"
+
+[dependencies]
+
+[features]
+default = []

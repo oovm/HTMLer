@@ -154,7 +154,11 @@ impl ZhihuAnswer {
                             }
                         }
                     }
-                    unknown => panic!("unknown element: {unknown}"),
+                    _ => {
+                        println!("{:?}", e);
+                        println!("{:?}", node.text().collect::<String>());
+                        write!(self.content, "{}", node.as_html())?;
+                    }
                 }
             }
             NodeKind::ProcessingInstruction(_) => {

@@ -117,6 +117,9 @@ impl EMathDissussion {
                         if e.has_class("attach_tips") {
                             // do nothing
                         }
+                        else if e.has_class("tip") {
+                            // do nothing
+                        }
                         else if e.has_class("quote") {
                             // do nothing
                         }
@@ -165,6 +168,13 @@ impl EMathDissussion {
                             println!("{:?}", node.text().collect::<String>())
                         }
                     }
+                    "strong" => {
+                        write!(self.content, "**")?;
+                        for child in node.children() {
+                            self.read_content_node(child)?;
+                        }
+                        write!(self.content, "**")?;
+                    }
                     "a" => match e.get_attribute("href") {
                         Some(link) => {
                             let inner = node.text().collect::<String>();
@@ -183,18 +193,9 @@ impl EMathDissussion {
                     }
                     _ => {
                         println!("{:?}", e);
-                        println!("{:?}", node.text().collect::<String>())
+                        println!("{:?}", node.text().collect::<String>());
+                        write!(self.content, "{}", node.as_html())?;
                     }
-                    // "figure" => {
-                    //     for child in node.descendants().filter(|e| e.has_class("img")) {
-                    //         let original = child.get_attribute("data-original");
-                    //         if !original.is_empty() {
-                    //             write!(self.content, "![]({})", original)?;
-                    //             break;
-                    //         }
-                    //     }
-                    // }
-                    unknown => panic!("unknown element: {unknown}"),
                 }
             }
             NodeKind::ProcessingInstruction(_) => {

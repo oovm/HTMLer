@@ -1,7 +1,7 @@
 use reqwest::Url;
-use std::{io::Write, str::FromStr};
+use std::str::FromStr;
 use url::Host;
-use zhihu_link::{utils::save_string, AutoMarkdown, BilibiliArticle, EMathDissussion, ZhihuAnswer, ZhihuArticle};
+use zhihu_link::{utils::save_string, BilibiliArticle, EMathDissussion, ZhihuAnswer, ZhihuArticle};
 
 #[test]
 fn ready() {
@@ -45,9 +45,8 @@ async fn pre_fetch() {
 #[tokio::test]
 async fn test_url() {
     // let answer = ZhihuAuto::new("https://www.zhihu.com/question/30928007/answer/1360071170").unwrap();
-    let answer = AutoMarkdown::new("https://zhuanlan.zhihu.com/p/438085414").await.unwrap();
-    let mut file = std::fs::File::create("test.md").unwrap();
-    file.write_all(answer.as_bytes()).unwrap();
+    let answer = ZhihuAnswer::new(512869622, 2333285369).await.unwrap();
+    answer.save("test.md").unwrap()
     // answer.save("test.md").await.unwrap();
 }
 

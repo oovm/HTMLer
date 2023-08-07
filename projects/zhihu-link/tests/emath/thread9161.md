@@ -4,7 +4,11 @@
 
 我用编程的方法，得到了如下数据：
 
-
+<table cellspacing="0" class="t_table" style="width:50%"><tbody><tr><td colspan="2" rowspan="2" width="8"> </td><td colspan="12"> m种颜色</td></tr><tr><td> 1 </td><td> 2 </td><td> 3 </td><td> 4 </td><td> 5 </td><td> 6 </td><td> 7 </td><td> 8 </td><td> 9 </td><td> 10 </td><td> 11 </td><td> 12 </td></tr><tr><td rowspan="11"><br>
+ n<br>
+颗<br>
+珠<br>
+子</td><td> 2 </td><td>1 </td><td>3 </td><td>6 </td><td>10 </td><td>15 </td><td>21 </td><td>28 </td><td> 36</td><td>45 </td><td>55 </td><td>66 </td><td>78</td></tr><tr><td> 3</td><td>1 </td><td> 4</td><td>10 </td><td> 20</td><td>35 </td><td> 56</td><td>84 </td><td> 120</td><td> 165</td><td>220 </td><td>286 </td><td>364 </td></tr><tr><td> 4</td><td>1 </td><td>6 </td><td>21 </td><td> 55</td><td>120 </td><td>231 </td><td>406 </td><td>666 </td><td> 1035</td><td> 1540</td><td>2211 </td><td>3081 </td></tr><tr><td> 5</td><td>1 </td><td>8 </td><td>39 </td><td>136 </td><td> 377</td><td>888 </td><td>1855 </td><td> 3536</td><td>6273 </td><td>10504 </td><td> 16775</td><td> 25752</td></tr><tr><td> 6</td><td> 1</td><td>13 </td><td>92 </td><td>430 </td><td> 1505</td><td>4291 </td><td> 10528</td><td> 23052</td><td> 46185</td><td>86185 </td><td>151756 </td><td>254618</td></tr><tr><td> 7</td><td>1 </td><td>18 </td><td>198 </td><td>1300 </td><td> 5895</td><td>20646 </td><td>60028 </td><td> 151848</td><td>344925 </td><td>719290 </td><td> 1399266</td><td>2569788 </td></tr><tr><td> 8</td><td>1 </td><td> 30</td><td>498 </td><td>4435 </td><td>25395</td><td>107331 </td><td>365260 </td><td>1058058 </td><td>2707245 </td><td>6278140 </td><td>13442286 </td><td> 26942565</td></tr><tr><td> 9</td><td> 1</td><td> 46</td><td> 1219</td><td>15084 </td><td> 110085</td><td>563786 </td><td> 2250311</td><td>7472984 </td><td> 21552969</td><td>55605670 </td><td>131077771 </td><td>286779076 </td></tr><tr><td>10</td><td>1 </td><td> 78</td><td> 3210</td><td>53764 </td><td>493131 </td><td> 3037314</td><td>14158228 </td><td>53762472 </td><td>174489813 </td><td>500280022 </td><td> 1297362462</td><td>3096689388 </td></tr><tr><td>11</td><td>1 </td><td>126 </td><td>8418 </td><td> 192700</td><td>2227275 </td><td>16514106 </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr><tr><td>12 </td><td>1 </td><td>224 </td><td>22913 </td><td> 704370</td><td>10196680 </td><td> 90782986</td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr></tbody></table>
 
 根据上表数据，外推出 n 小于等于 6 时通项公式：
 
@@ -20,7 +24,7 @@
 
 
 
-
+<font size="4">可否得到 S (m, n)的二元表达式？</font>
 
 ---
 Case S(3,4)， 红绿黄三色四珠的手串。每种颜色的珠子都足够多，用它们穿手串，那么共有 21 种不同色配的手串，全谱图如下。
@@ -36,7 +40,7 @@ Case S(3,4)， 红绿黄三色四珠的手串。每种颜色的珠子都足够�
 
 
 ---
-需要引用一下相关知识。
+需要引用一下**带有重复元素的圆排列和环排列**相关知识。
 
 
 
@@ -50,7 +54,7 @@ Case S(3,4)， 红绿黄三色四珠的手串。每种颜色的珠子都足够�
 
 2）环排列数为$$R(S)=\frac{Q(S)+M(S)}{2}$$其中，`\D M(S)=\frac{\left(\sum_{i=1}^k [n_i/2]\right)!}{\Pi_{i=1}^k [n_i/2]!}` 为对称圆排列数，`[x]` 为高斯函数（表示 `x` 的整数部分）。
 
-注意：和，概念有细微区别。环排列考虑旋转不变且翻转不变，而圆排列考虑的是旋转不变。
+注意：**环排列**和**圆排列**，概念有细微区别。环排列考虑旋转不变且翻转不变，而圆排列考虑的是旋转不变。
 
 
 
@@ -121,11 +125,13 @@ S(m,10)=[A060562](http://oeis.org/A060562)(n)
 
 对于 `m` 个颜色可重复地选取 `n` 个排成一圈，圆排列数为$$N(m,n)=\frac{1}{n}\sum_{i=1}^n m^{(n,i)}$$环排列数为
 
-$$M(m,n)=N(m,n)/2+\begin{cases}\D\frac{m^{k+1}}{2},&n=2k+1\\
+$$
+M(m,n)=N(m,n)/2+\begin{cases}\dfrac{m^{k+1}}{2},&n=2k+1\\
 
-\D\frac{(m+1)m^k}{4},&n=2k
+\dfrac{(m+1)m^k}{4},&n=2k
 
-\end{cases}$$
+\end{cases}
+$$
 
 经验证，符合1楼所给的经验公式。
 
