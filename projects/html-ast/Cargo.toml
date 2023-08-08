@@ -1,9 +1,10 @@
 [package]
 name = "html-ast"
 version = "0.1.0"
-description = "HTML parsing and querying with CSS selectors"
+description = "Construct and generate legal html string"
 repository = "https://github.com/oovm/zhihu-markdown/blob/dev/projects/htmler"
 documentation = "https://docs.rs/html-ast"
+readme = "readme.md"
 keywords = [
     "html",
     "css",
@@ -11,9 +12,9 @@ keywords = [
 authors = [
     "Aster <192607617@qq.com>",
 ]
-license = "ISC"
+license = "MPL-2.0"
 edition = "2021"
-readme = "readme.md"
+
 
 [dependencies]
 

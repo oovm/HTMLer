@@ -1,2 +1,4 @@
 mod elements;
-pub mod node;
+mod node;
+
+pub use crate::{elements::HtmlElement, node::HtmlNode};

@@ -1,22 +1,23 @@
-use std::collections::BTreeMap;
+mod display;
 
+use crate::HtmlElement;
+use std::{
+    borrow::Cow,
+    fmt::{Display, Formatter},
+};
+
+#[derive(Clone, PartialEq, Eq)]
 pub enum HtmlNode {
     /// A doctype.
     Doctype(DocType),
     /// A comment.
     Comment(String),
     /// Text.
-    Text(String),
+    Text(Cow<'static, str>),
     /// An element.
-    Element(HTMLElement),
+    Element(HtmlElement),
     /// A processing instruction.
     ProcessingInstruction(ProcessingInstruction),
-}
-
-impl Default for HtmlNode {
-    fn default() -> Self {
-        Self::Element(HTMLElement::default())
-    }
 }
 
 /// A doctype.
