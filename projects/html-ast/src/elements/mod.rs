@@ -85,8 +85,32 @@ impl HtmlElement {
         self.add_child(child);
         self
     }
-    pub fn with_text<S: ToString>(mut self, text: S) -> Self {
-        self.children.push(HtmlNode::Text(Cow::Owned(text.to_string())));
+    /// Add a section of HTML text that does not need to be transferred
+    pub fn add_safe_text(&mut self, text: Cow<'static, str>) {
+        self.children.push(HtmlNode::Text(text))
+    }
+    /// Add a section of HTML text and make righteousness
+    pub fn add_text<S: AsRef<str>>(&mut self, text: S) {
+        let txt = text.as_ref();
+        let mut text = String::with_capacity(txt.len());
+        for c in txt.chars() {
+            match c {
+                '<' => text.push_str("&lt;"),
+                '>' => text.push_str("&gt;"),
+                '&' => text.push_str("&amp;"),
+                '"' => text.push_str("&quot;"),
+                '\'' => text.push_str("&#39;"),
+                _ => text.push(c),
+            }
+        }
+        self.children.push(HtmlNode::Text(Cow::Owned(text)));
+    }
+    pub fn with_safe_text(mut self, text: Cow<'static, str>) -> Self {
+        self.add_safe_text(text);
+        self
+    }
+    pub fn with_text<S: AsRef<str>>(mut self, text: S) -> Self {
+        self.add_text(text);
         self
     }
 }

@@ -1,7 +1,8 @@
 use crate::{utils::select_text, MarkResult, ZhihuError};
-use htmler::{Html, Selector};
+use htmler::{Html, Node, NodeKind, Selector};
+use serde_json::Value;
 use std::{
-    fmt::{Display, Formatter},
+    fmt::{Display, Formatter, Write},
     io::Write as _,
     path::Path,
     str::FromStr,
@@ -90,9 +91,116 @@ impl ZhihuArticle {
     }
     fn extract_content(&mut self, html: &Html) -> MarkResult<()> {
         // div.RichContent-inner
-        let json = select_text(&html, &SELECT_CONTENT).unwrap_or_default();
-        let decode = serde_json::from_str::<serde_json::Value>(&json)?;
-        self.content = format!("{:#?}", decode);
+        let root = match select_text(&html, &SELECT_CONTENT) {
+            Some(s) => serde_json::from_str::<Value>(&s)?,
+            None => todo!(),
+        };
+        let text = try {
+            let root = root.as_object()?;
+            let initial = root.get("initialState")?.as_object()?;
+            let entities = initial.get("entities")?.as_object()?;
+            let articles = entities.get("articles")?.as_object()?;
+            let article = articles.iter().nth(0)?.1.as_object()?;
+            article.get("content")?.as_str()?
+        };
+        let html = match text {
+            Some(s) => Html::parse_document(s),
+            None => {
+                todo!()
+            }
+        };
+        for child in html.root_node().children() {
+            self.read_content_node(child)?;
+        }
+        Ok(())
+    }
+    fn read_content_node(&mut self, node: Node) -> MarkResult<()> {
+        match node.as_kind() {
+            NodeKind::Document => {
+                println!("document")
+            }
+            NodeKind::Fragment => {
+                println!("fragment")
+            }
+            NodeKind::Doctype(_) => {
+                println!("doctype")
+            }
+            NodeKind::Comment(_) => {
+                println!("comment")
+            }
+            NodeKind::Text(t) => {
+                self.content.push_str(t.trim());
+            }
+            NodeKind::Element(e) => {
+                match e.name() {
+                    "head" => {
+                        // do nothing
+                    }
+                    "body" => {
+                        for child in node.children() {
+                            self.read_content_node(child)?;
+                        }
+                    }
+                    "h1" | "h2" | "h3" => {
+                        match e.name() {
+                            "h1" => self.content.push_str("# "),
+                            "h2" => self.content.push_str("## "),
+                            "h3" => self.content.push_str("### "),
+                            _ => {}
+                        }
+                        for child in node.children() {
+                            self.read_content_node(child)?;
+                        }
+                        self.content.push_str("\n\n");
+                    }
+                    "p" => {
+                        for child in node.children() {
+                            self.read_content_node(child)?;
+                        }
+                        self.content.push_str("\n\n");
+                    }
+                    // "span" => {
+                    //     // math mode
+                    //     if e.has_class("ztext-math") {
+                    //         match e.get_attribute("data-tex") {
+                    //             Some(s) => {
+                    //                 self.content.push_str(" $$");
+                    //                 self.content.push_str(s);
+                    //                 self.content.push_str("$$ ");
+                    //             }
+                    //             None => {}
+                    //         }
+                    //     }
+                    //     // normal mode
+                    //     else {
+                    //         for child in node.children() {
+                    //             self.read_content_node(child)?;
+                    //         }
+                    //     }
+                    // }
+                    // "br" => {
+                    //     self.content.push_str("\n");
+                    // }
+                    // "figure" => {
+                    //     for child in node.descendants().filter(|e| e.has_class("img")) {
+                    //         let original = child.get_attribute("data-original");
+                    //         if !original.is_empty() {
+                    //             write!(self.content, "![]({})", original)?;
+                    //             break;
+                    //         }
+                    //     }
+                    // }
+                    _ => {
+                        println!("{:?}", e);
+                        println!("{:?}", node.text().collect::<String>());
+                        write!(self.content, "{}", node.as_html())?;
+                    }
+                }
+            }
+            NodeKind::ProcessingInstruction(_) => {
+                println!("processing instruction");
+            }
+        }
         Ok(())
     }
 }

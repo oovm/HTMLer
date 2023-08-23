@@ -2,12 +2,11 @@
 name = "html-ast"
 version = "0.1.0"
 description = "Construct and generate legal html string"
-repository = "https://github.com/oovm/zhihu-markdown/blob/dev/projects/htmler"
+repository = "https://github.com/oovm/htmler/blob/dev/projects/html-ast"
 documentation = "https://docs.rs/html-ast"
 readme = "readme.md"
 keywords = [
     "html",
-    "css",
 ]
 authors = [
     "Aster <192607617@qq.com>",

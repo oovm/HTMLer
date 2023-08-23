@@ -44,9 +44,13 @@ async fn pre_fetch() {
 
 #[tokio::test]
 async fn test_url() {
+    // https://www.zhihu.com/question/588042290/answer/2926009682
     // let answer = ZhihuAuto::new("https://www.zhihu.com/question/30928007/answer/1360071170").unwrap();
-    let answer = ZhihuAnswer::new(512869622, 2333285369).await.unwrap();
+    // let answer = ZhihuAnswer::new(588042290, 2926009682).await.unwrap();
+    // answer.save("test.md").unwrap()
+    let answer = ZhihuArticle::new(643912769).await.unwrap();
     answer.save("test.md").unwrap()
+
     // answer.save("test.md").await.unwrap();
 }
 
