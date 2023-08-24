@@ -7,7 +7,7 @@ use htmler::{Html, Selector};
 
 #[test]
 fn tag_with_newline() {
-    let selector = Selector::try_parse("a").unwrap();
+    let selector = Selector::try_from("a").unwrap();
 
     let document = Html::parse_fragment(
         r#"
@@ -20,7 +20,7 @@ fn tag_with_newline() {
 
     let mut iter = document.select(&selector);
     let a = iter.next().unwrap();
-    assert_eq!(a.value().get_attribute("href"), Some("https://github.com/causal-agent/scraper"));
+    assert_eq!(a.get_attribute("href"), "https://github.com/causal-agent/scraper");
 }
 
 #[test]

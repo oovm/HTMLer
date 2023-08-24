@@ -2,10 +2,12 @@ use crate::Node;
 use html5ever::Namespace;
 use selectors::{
     attr::{AttrSelectorOperation, CaseSensitivity, NamespaceConstraint},
-    matching, OpaqueElement,
+    context::MatchingContext,
+    matching::ElementSelectorFlags,
+    OpaqueElement, SelectorImpl,
 };
 
-use crate::selector::{CssLocalName, CssString, NonTSPseudoClass, PseudoElement, Simple};
+use crate::selector::{CssLocalName, CssString, PseudoElement, Simple};
 
 /// Note: will never match against non-tree-structure pseudo-classes.
 impl<'a> selectors::Element for Node<'a> {
@@ -37,6 +39,15 @@ impl<'a> selectors::Element for Node<'a> {
 
     fn next_sibling_element(&self) -> Option<Self> {
         self.ptr.next_siblings().find(|sibling| sibling.value().is_element()).map(Node::new)
+    }
+
+    fn first_element_child(&self) -> Option<Self> {
+        for child in self.children() {
+            if child.ptr.value().is_element() {
+                return Some(child);
+            }
+        }
+        None
     }
 
     fn is_html_element_in_html_document(&self) -> bool {
@@ -75,18 +86,19 @@ impl<'a> selectors::Element for Node<'a> {
         })
     }
 
-    fn match_non_ts_pseudo_class<F>(
+    fn match_non_ts_pseudo_class(
         &self,
-        _pc: &NonTSPseudoClass,
-        _context: &mut matching::MatchingContext<Self::Impl>,
-        _flags_setter: &mut F,
+        _: &<Self::Impl as SelectorImpl>::NonTSPseudoClass,
+        _: &mut MatchingContext<Self::Impl>,
     ) -> bool {
         false
     }
 
-    fn match_pseudo_element(&self, _pe: &PseudoElement, _context: &mut matching::MatchingContext<Self::Impl>) -> bool {
-        false
+    fn match_pseudo_element(&self, _: &PseudoElement, _context: &mut MatchingContext<Self::Impl>) -> bool {
+        true
     }
+
+    fn apply_selector_flags(&self, _: ElementSelectorFlags) {}
 
     fn is_link(&self) -> bool {
         self.is_a("link")

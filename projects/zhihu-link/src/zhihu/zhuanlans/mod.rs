@@ -159,6 +159,23 @@ impl ZhihuArticle {
                         }
                         self.content.push_str("\n\n");
                     }
+                    "img" => match e.get_attribute("src") {
+                        Some(s) if s.contains("equation?tex=") => match e.get_attribute("alt") {
+                            Some(s) => {
+                                self.content.push_str("$$");
+                                self.content.push_str(s);
+                                self.content.push_str("$$");
+                            }
+                            None => {}
+                        },
+                        _ => {
+                            todo!()
+                        }
+                    },
+                    "hr" => {
+                        self.content.push_str("\n\n---\n\n");
+                    }
+
                     // "span" => {
                     //     // math mode
                     //     if e.has_class("ztext-math") {

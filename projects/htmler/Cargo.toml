@@ -1,6 +1,6 @@
 [package]
 name = "htmler"
-version = "0.1.0"
+version = "0.1.1"
 description = "HTML parsing and querying with CSS selectors"
 repository = "https://github.com/oovm/zhihu-markdown/blob/dev/projects/htmler"
 documentation = "https://docs.rs/htmler"
@@ -19,10 +19,10 @@ edition = "2021"
 readme = "readme.md"
 
 [dependencies]
-cssparser = "0.29.6"
+cssparser = "0.31.0"
 ego-tree = "0.6.2"
 html5ever = "0.26"
-selectors = "0.24.0"
+selectors = "0.25.0"
 smallvec = "1.10.0"
 tendril = "0.4.3"
 indexmap = "1.9.3"

@@ -7,10 +7,10 @@ use smallvec::SmallVec;
 use html5ever::{LocalName, Namespace};
 use selectors::{
     matching,
-    parser::{SelectorList, SelectorParseErrorKind},
+    parser::{self, ParseRelative, SelectorParseErrorKind},
 };
 
-use crate::{error::SelectorErrorKind, Node};
+use crate::{error::SelectorErrorKind, Node as ElementRef};
 
 /// Wrapper around CSS selectors.
 ///
@@ -18,43 +18,47 @@ use crate::{error::SelectorErrorKind, Node};
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Selector {
     /// The CSS selectors.
-    selectors: SmallVec<[selectors::parser::Selector<Simple>; 1]>,
+    selectors: SmallVec<[parser::Selector<Simple>; 1]>,
 }
 
 impl Selector {
     /// Parses a CSS selector group.
-    pub fn new(selectors: &str) -> Self {
-        Self::try_parse(selectors).expect("Failed to parse selector:`{selectors}`}")
-    }
 
-    /// Parses a CSS selector group.
-    pub fn try_parse(selectors: &'_ str) -> Result<Self, SelectorErrorKind> {
+    pub fn parse(selectors: &'_ str) -> Result<Self, SelectorErrorKind> {
         let mut parser_input = cssparser::ParserInput::new(selectors);
         let mut parser = cssparser::Parser::new(&mut parser_input);
 
-        SelectorList::parse(&Parser, &mut parser).map(|list| Selector { selectors: list.0 }).map_err(SelectorErrorKind::from)
+        parser::SelectorList::parse(&Parser, &mut parser, ParseRelative::No)
+            .map(|list| Selector { selectors: list.0 })
+            .map_err(SelectorErrorKind::from)
     }
 
     /// Returns true if the element matches this selector.
-    pub fn matches(&self, element: &Node) -> bool {
+    pub fn matches(&self, element: &ElementRef) -> bool {
         self.matches_with_scope(element, None)
     }
 
     /// Returns true if the element matches this selector.
     /// The optional `scope` argument is used to specify which element has `:scope` pseudo-class.
     /// When it is `None`, `:scope` will match the root element.
-    pub fn matches_with_scope(&self, element: &Node, scope: Option<Node>) -> bool {
-        let mut context =
-            matching::MatchingContext::new(matching::MatchingMode::Normal, None, None, matching::QuirksMode::NoQuirks);
+    pub fn matches_with_scope(&self, element: &ElementRef, scope: Option<ElementRef>) -> bool {
+        let mut nth_index_cache = Default::default();
+        let mut context = matching::MatchingContext::new(
+            matching::MatchingMode::Normal,
+            None,
+            &mut nth_index_cache,
+            matching::QuirksMode::NoQuirks,
+            matching::NeedsSelectorFlags::No,
+            matching::IgnoreNthChildForInvalidation::No,
+        );
         context.scope_element = scope.map(|x| selectors::Element::opaque(&x));
-        self.selectors.iter().any(|s| matching::matches_selector(s, 0, None, element, &mut context, &mut |_, _| {}))
+        self.selectors.iter().any(|s| matching::matches_selector(s, 0, None, element, &mut context))
     }
 }
 
 /// An implementation of `Parser` for `selectors`
 struct Parser;
-
-impl<'i> selectors::parser::Parser<'i> for Parser {
+impl<'i> parser::Parser<'i> for Parser {
     type Impl = Simple;
     type Error = SelectorParseErrorKind<'i>;
 }
@@ -63,20 +67,20 @@ impl<'i> selectors::parser::Parser<'i> for Parser {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Simple;
 
-impl selectors::parser::SelectorImpl for Simple {
-    // see: https://github.com/servo/servo/pull/19747#issuecomment-357106065
-    type ExtraMatchingData = String;
+impl parser::SelectorImpl for Simple {
     type AttrValue = CssString;
     type Identifier = CssLocalName;
     type LocalName = CssLocalName;
-    type NamespaceUrl = Namespace;
     type NamespacePrefix = CssLocalName;
+    type NamespaceUrl = Namespace;
     type BorrowedNamespaceUrl = Namespace;
-
     type BorrowedLocalName = CssLocalName;
-    type NonTSPseudoClass = NonTSPseudoClass;
 
+    type NonTSPseudoClass = NonTSPseudoClass;
     type PseudoElement = PseudoElement;
+
+    // see: https://github.com/servo/servo/pull/19747#issuecomment-357106065
+    type ExtraMatchingData<'a> = ();
 }
 
 /// Wraps [`String`] so that it can be used with [`selectors`]
@@ -127,7 +131,7 @@ impl cssparser::ToCss for CssLocalName {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum NonTSPseudoClass {}
 
-impl selectors::parser::NonTSPseudoClass for NonTSPseudoClass {
+impl parser::NonTSPseudoClass for NonTSPseudoClass {
     type Impl = Simple;
 
     fn is_active_or_hover(&self) -> bool {
@@ -152,7 +156,7 @@ impl cssparser::ToCss for NonTSPseudoClass {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PseudoElement {}
 
-impl selectors::parser::PseudoElement for PseudoElement {
+impl parser::PseudoElement for PseudoElement {
     type Impl = Simple;
 }
 
@@ -169,7 +173,7 @@ impl<'i> TryFrom<&'i str> for Selector {
     type Error = SelectorErrorKind<'i>;
 
     fn try_from(s: &'i str) -> Result<Self, Self::Error> {
-        Selector::try_parse(s)
+        Selector::parse(s)
     }
 }
 
